@@ -1,0 +1,272 @@
+/* Login */
+.login-screen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  max-width: 360px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.login-card p {
+  color: var(--text-dim);
+  margin: 0 0 8px;
+}
+
+.login-error {
+  color: var(--danger) !important;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--accent-grad);
+  color: #08080a;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.btn-link {
+  color: var(--text-dim);
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+/* App shell */
+.app-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(16px, env(safe-area-inset-top)) 20px 12px;
+}
+
+.app-header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 16px 24px;
+}
+
+/* Library */
+.search-bar {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding: 4px 0 12px;
+  z-index: 1;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+
+.breadcrumb button {
+  color: var(--text-dim);
+  padding: 4px;
+}
+
+.breadcrumb button.active {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.breadcrumb .sep {
+  margin: 0 2px;
+}
+
+.hint-text,
+.error-text {
+  color: var(--text-dim);
+  padding: 12px 4px;
+}
+
+.error-text {
+  color: var(--danger);
+}
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 8px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.item-row:active {
+  background: var(--surface-2);
+}
+
+.item-icon {
+  flex-shrink: 0;
+  color: var(--text-dim);
+}
+
+.item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track-row.playing {
+  color: var(--accent-2);
+}
+
+.track-row.playing .item-icon {
+  color: var(--accent-2);
+}
+
+/* Now playing bar */
+.now-playing-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  border-top: 1px solid #26262f;
+  padding: 8px 16px max(10px, env(safe-area-inset-bottom));
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-row .time {
+  font-size: 12px;
+  color: var(--text-dim);
+  min-width: 34px;
+  text-align: center;
+}
+
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.track-info {
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.track-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--text);
+}
+
+.icon-btn.active {
+  color: var(--accent-2);
+}
+
+.icon-btn.play-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-grad);
+  color: #08080a;
+}
+
+/* Queue overlay */
+.queue-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+}
+
+.queue-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.queue-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.queue-overlay .item-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+@media (min-width: 700px) {
+  .app-main {
+    max-width: 720px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .queue-overlay {
+    max-width: 480px;
+    left: auto;
+    right: 0;
+    border-left: 1px solid #26262f;
+  }
+}
