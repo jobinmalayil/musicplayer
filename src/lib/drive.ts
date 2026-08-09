@@ -59,6 +59,20 @@ export async function listFolder(folderId = 'root'): Promise<{ folders: DriveIte
   };
 }
 
+/** Finds a folder anywhere in Drive by name (case-insensitive exact match preferred). */
+export async function findFolderByName(name: string): Promise<DriveItem | null> {
+  const escaped = name.replace(/'/g, "\\'");
+  const q = `trashed = false and mimeType = '${FOLDER_MIME}' and name contains '${escaped}'`;
+  const res = await driveFetch('/files', {
+    q,
+    fields: 'files(id, name, mimeType, parents)',
+    pageSize: '10',
+  });
+  const data = (await res.json()) as { files: DriveItem[] };
+  const lower = name.toLowerCase();
+  return data.files.find((f) => f.name.toLowerCase() === lower) ?? data.files[0] ?? null;
+}
+
 /** Recursively searches the whole Drive for audio files matching a name query. */
 export async function searchTracks(query: string): Promise<Track[]> {
   const escaped = query.replace(/'/g, "\\'");

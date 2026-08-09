@@ -148,34 +148,88 @@
   white-space: nowrap;
 }
 
-.track-row.playing {
+.track-row.playing .item-name {
   color: var(--accent-2);
+  font-weight: 600;
 }
 
-.track-row.playing .item-icon {
-  color: var(--accent-2);
+/* Track art (colored placeholder thumbnail, since Drive has no album art) */
+.track-art {
+  flex-shrink: 0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
 }
 
-/* Now playing bar */
+.track-art-sm {
+  width: 44px;
+  height: 44px;
+}
+
+.track-art-lg {
+  width: min(70vw, 300px);
+  height: min(70vw, 300px);
+  border-radius: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+}
+
+.eq-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 40%;
+}
+
+.eq-bars span {
+  width: 3px;
+  background: #fff;
+  border-radius: 2px;
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+
+.eq-bars span:nth-child(1) {
+  animation-delay: -0.6s;
+}
+
+.eq-bars span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+@keyframes eq-bounce {
+  0%,
+  100% {
+    height: 30%;
+  }
+  50% {
+    height: 100%;
+  }
+}
+
+/* Now playing bar (compact mini-player) */
 .now-playing-bar {
   position: sticky;
   bottom: 0;
   background: var(--surface);
   border-top: 1px solid #26262f;
-  padding: 8px 16px max(10px, env(safe-area-inset-bottom));
+  padding: 0 16px max(6px, env(safe-area-inset-bottom));
+  overflow: hidden;
 }
 
-.progress-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.mini-progress {
+  height: 2px;
+  margin: 0 -16px;
+  background: #2b2b36;
+  position: relative;
 }
 
-.progress-row .time {
-  font-size: 12px;
-  color: var(--text-dim);
-  min-width: 34px;
-  text-align: center;
+.mini-progress::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--progress, 0%);
+  background: var(--accent-grad);
 }
 
 .controls-row {
@@ -183,27 +237,30 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 4px;
+  padding: 8px 0;
 }
 
 .track-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   flex: 1;
   text-align: left;
 }
 
 .track-title {
-  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
+  font-size: 14px;
 }
 
 .transport {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 }
 
@@ -215,6 +272,7 @@
   height: 36px;
   border-radius: 50%;
   color: var(--text);
+  flex-shrink: 0;
 }
 
 .icon-btn.active {
@@ -228,30 +286,94 @@
   color: #08080a;
 }
 
-/* Queue overlay */
-.queue-overlay {
+/* Now playing full screen */
+.now-playing-screen {
   position: fixed;
   inset: 0;
-  background: var(--bg);
-  z-index: 10;
+  background: linear-gradient(180deg, #201a33, var(--bg) 55%);
+  z-index: 20;
   display: flex;
   flex-direction: column;
-  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  padding: max(16px, env(safe-area-inset-top)) 20px max(16px, env(safe-area-inset-bottom));
 }
 
-.queue-header {
+.np-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.np-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 4px;
+  margin: 0 auto;
+}
+
+.np-tabs button {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.np-tabs button.active {
+  background: var(--accent-grad);
+  color: #08080a;
+}
+
+.np-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.np-meta {
+  text-align: center;
+}
+
+.np-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.np-progress {
+  width: 100%;
+  max-width: 400px;
+}
+
+.np-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.np-transport {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  justify-content: center;
+  gap: 20px;
 }
 
-.queue-header h2 {
-  margin: 0;
-  font-size: 20px;
+.icon-btn.play-btn-lg {
+  width: 64px;
+  height: 64px;
+  background: var(--accent-grad);
+  color: #08080a;
 }
 
-.queue-overlay .item-list {
+.np-queue-list {
   overflow-y: auto;
   flex: 1;
 }
@@ -263,7 +385,7 @@
     width: 100%;
   }
 
-  .queue-overlay {
+  .now-playing-screen {
     max-width: 480px;
     left: auto;
     right: 0;

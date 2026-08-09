@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getBreadcrumb, listFolder, searchTracks, trackTitle, type DriveItem, type Track } from '../lib/drive';
+import {
+  findFolderByName,
+  getBreadcrumb,
+  listFolder,
+  searchTracks,
+  trackTitle,
+  type DriveItem,
+  type Track,
+} from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
+import { TrackArt } from './TrackArt';
+
+const DEFAULT_FOLDER_NAME = 'jobin music';
 
 const FOLDER_ICON = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -8,27 +19,20 @@ const FOLDER_ICON = (
   </svg>
 );
 
-const TRACK_ICON = (
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-    <path d="M9 18V5l12-2v13" />
-    <circle cx="6" cy="18" r="3" fill="currentColor" stroke="none" />
-    <circle cx="18" cy="16" r="3" fill="currentColor" stroke="none" />
-  </svg>
-);
-
 export function Library() {
-  const [folderId, setFolderId] = useState('root');
+  const [folderId, setFolderId] = useState<string | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<DriveItem[]>([]);
   const [folders, setFolders] = useState<DriveItem[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [defaultFolderWarning, setDefaultFolderWarning] = useState<string | null>(null);
 
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[] | null>(null);
   const [searching, setSearching] = useState(false);
 
-  const { playQueue, currentTrack } = usePlayer();
+  const { playQueue, currentTrack, isPlaying } = usePlayer();
 
   const loadFolder = useCallback(async (id: string) => {
     setLoading(true);
@@ -45,8 +49,27 @@ export function Library() {
     }
   }, []);
 
+  // On first load, jump straight into the default folder instead of showing My Drive root.
   useEffect(() => {
-    void loadFolder(folderId);
+    let cancelled = false;
+    findFolderByName(DEFAULT_FOLDER_NAME)
+      .then((folder) => {
+        if (cancelled) return;
+        if (!folder) setDefaultFolderWarning(`Folder "${DEFAULT_FOLDER_NAME}" not found — showing My Drive instead.`);
+        setFolderId(folder?.id ?? 'root');
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Failed to locate default folder');
+        setFolderId('root');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (folderId) void loadFolder(folderId);
   }, [folderId, loadFolder]);
 
   useEffect(() => {
@@ -95,6 +118,7 @@ export function Library() {
       )}
 
       {error && <p className="error-text">{error}</p>}
+      {defaultFolderWarning && <p className="hint-text">{defaultFolderWarning}</p>}
       {(loading || searching) && <p className="hint-text">Loading…</p>}
 
       {searchResults === null && !loading && folders.length > 0 && (
@@ -122,7 +146,7 @@ export function Library() {
                 className={`item-row track-row ${currentTrack?.id === track.id ? 'playing' : ''}`}
                 onClick={() => playQueue(displayedTracks, i)}
               >
-                <span className="item-icon">{TRACK_ICON}</span>
+                <TrackArt trackId={track.id} playing={isPlaying && currentTrack?.id === track.id} size="sm" />
                 <span className="item-name">{trackTitle(track)}</span>
               </button>
             </li>
