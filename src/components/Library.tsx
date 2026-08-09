@@ -9,7 +9,6 @@ import {
   type Track,
 } from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
-import { TrackArt } from './TrackArt';
 
 const DEFAULT_FOLDER_NAME = 'jobin music';
 
@@ -139,18 +138,31 @@ export function Library() {
       )}
 
       {displayedTracks.length > 0 && (
-        <ul className="item-list">
-          {displayedTracks.map((track, i) => (
-            <li key={track.id}>
-              <button
-                className={`item-row track-row ${currentTrack?.id === track.id ? 'playing' : ''}`}
-                onClick={() => playQueue(displayedTracks, i)}
-              >
-                <TrackArt trackId={track.id} playing={isPlaying && currentTrack?.id === track.id} size="sm" />
-                <span className="item-name">{trackTitle(track)}</span>
-              </button>
-            </li>
-          ))}
+        <ul className="item-list track-list">
+          {displayedTracks.map((track, i) => {
+            const isCurrent = currentTrack?.id === track.id;
+            return (
+              <li key={track.id}>
+                <button
+                  className={`item-row track-row ${isCurrent ? 'playing' : ''}`}
+                  onClick={() => playQueue(displayedTracks, i)}
+                >
+                  <span className="track-num">
+                    {isCurrent && isPlaying ? (
+                      <span className="eq-bars" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                    ) : (
+                      i + 1
+                    )}
+                  </span>
+                  <span className="item-name">{trackTitle(track)}</span>
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

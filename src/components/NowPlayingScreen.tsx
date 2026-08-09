@@ -3,6 +3,7 @@ import { usePlayer } from '../context/PlayerContext';
 import { trackTitle } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { TrackArt } from './TrackArt';
+import { WaveformProgress } from './WaveformProgress';
 import { ChevronDownIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, RepeatIcon, ShuffleIcon } from './icons';
 
 export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
@@ -54,14 +55,7 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
           </div>
 
           <div className="np-progress">
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              value={Math.min(currentTime, duration || 0)}
-              onChange={(e) => seek(Number(e.target.value))}
-              aria-label="Seek"
-            />
+            <WaveformProgress trackId={currentTrack.id} currentTime={currentTime} duration={duration} onSeek={seek} />
             <div className="np-time-row">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>

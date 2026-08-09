@@ -55,7 +55,7 @@ function loadGisScript(): Promise<void> {
 }
 
 function readStoredToken(): StoredToken | null {
-  const raw = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  const raw = localStorage.getItem(TOKEN_STORAGE_KEY);
   if (!raw) return null;
   try {
     return JSON.parse(raw) as StoredToken;
@@ -66,9 +66,9 @@ function readStoredToken(): StoredToken | null {
 
 function writeStoredToken(token: StoredToken | null) {
   if (token) {
-    sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
+    localStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
   } else {
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
   }
 }
 
