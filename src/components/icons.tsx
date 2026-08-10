@@ -68,3 +68,20 @@ export function CloseIcon({ size = 24 }: IconProps) {
     </svg>
   );
 }
+
+export function HomeIcon({ size = 22 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M12 3.2 3 10.5V21h6v-6h6v6h6V10.5z" />
+    </svg>
+  );
+}
+
+export function DiscIcon({ size = 22 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 12.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" />
+      <circle cx="12" cy="12" r="1.6" fill="var(--bg)" />
+    </svg>
+  );
+}

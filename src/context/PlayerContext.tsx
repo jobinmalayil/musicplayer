@@ -24,6 +24,9 @@ interface PlayerContextValue {
   volume: number;
   shuffle: boolean;
   repeat: RepeatMode;
+  screenOpen: boolean;
+  openScreen: () => void;
+  closeScreen: () => void;
   playQueue: (tracks: Track[], startIndex: number) => void;
   togglePlay: () => void;
   playNext: () => void;
@@ -62,6 +65,10 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [volume, setVolumeState] = useState(1);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<RepeatMode>('off');
+  const [screenOpen, setScreenOpen] = useState(false);
+
+  const openScreen = useCallback(() => setScreenOpen(true), []);
+  const closeScreen = useCallback(() => setScreenOpen(false), []);
 
   const currentIndex = order[orderPos] ?? -1;
   const currentTrack = currentIndex >= 0 ? queue[currentIndex] : null;
@@ -251,6 +258,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       volume,
       shuffle,
       repeat,
+      screenOpen,
+      openScreen,
+      closeScreen,
       playQueue,
       togglePlay,
       playNext,
@@ -272,6 +282,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       volume,
       shuffle,
       repeat,
+      screenOpen,
+      openScreen,
+      closeScreen,
       playQueue,
       togglePlay,
       playNext,

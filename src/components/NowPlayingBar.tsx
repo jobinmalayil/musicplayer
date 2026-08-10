@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { type CSSProperties } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { trackTitle } from '../lib/drive';
 import { TrackArt } from './TrackArt';
@@ -6,10 +6,19 @@ import { NowPlayingScreen } from './NowPlayingScreen';
 import { NextIcon, PauseIcon, PlayIcon, PrevIcon } from './icons';
 
 export function NowPlayingBar() {
-  const { currentTrack, isPlaying, isLoading, currentTime, duration, togglePlay, playNext, playPrevious } =
-    usePlayer();
-
-  const [expanded, setExpanded] = useState(false);
+  const {
+    currentTrack,
+    isPlaying,
+    isLoading,
+    currentTime,
+    duration,
+    togglePlay,
+    playNext,
+    playPrevious,
+    screenOpen,
+    openScreen,
+    closeScreen,
+  } = usePlayer();
 
   if (!currentTrack) return null;
 
@@ -17,11 +26,11 @@ export function NowPlayingBar() {
 
   return (
     <>
-      {expanded && <NowPlayingScreen onClose={() => setExpanded(false)} />}
+      {screenOpen && <NowPlayingScreen onClose={closeScreen} />}
       <div className="now-playing-bar">
         <div className="mini-progress" style={{ '--progress': `${progressPct}%` } as CSSProperties} />
         <div className="controls-row">
-          <button className="track-info" onClick={() => setExpanded(true)}>
+          <button className="track-info" onClick={openScreen}>
             <TrackArt trackId={currentTrack.id} playing={isPlaying} size="sm" />
             <span className="track-title">{isLoading ? 'Loading…' : trackTitle(currentTrack)}</span>
           </button>

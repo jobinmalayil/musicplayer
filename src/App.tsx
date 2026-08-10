@@ -1,6 +1,7 @@
 import { PlayerProvider } from './context/PlayerContext';
 import { Library } from './components/Library';
 import { NowPlayingBar } from './components/NowPlayingBar';
+import { BottomNav } from './components/BottomNav';
 import './App.css';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
           <Library />
         </main>
         <NowPlayingBar />
+        <BottomNav />
       </div>
     </PlayerProvider>
   );

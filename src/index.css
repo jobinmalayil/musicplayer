@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
-  --bg: #0e0620;
-  --surface: rgba(255, 255, 255, 0.06);
-  --surface-2: rgba(255, 255, 255, 0.09);
-  --border: rgba(255, 255, 255, 0.1);
+  --bg: #2e1667;
+  --surface: rgba(255, 255, 255, 0.09);
+  --surface-2: rgba(255, 255, 255, 0.14);
+  --border: rgba(255, 255, 255, 0.14);
   --text: #f5f3ff;
-  --text-dim: #a99fc7;
-  --accent-1: #8b5cf6;
+  --text-dim: #c3b3ea;
+  --accent-1: #a855f7;
   --accent-2: #ec4899;
   --accent-grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));
   --danger: #ff5b6d;
@@ -25,11 +25,7 @@ body,
 
 body {
   margin: 0;
-  background:
-    radial-gradient(ellipse 90% 60% at 15% -10%, rgba(139, 92, 246, 0.35), transparent 60%),
-    radial-gradient(ellipse 80% 55% at 100% 0%, rgba(236, 72, 153, 0.25), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 10% 100%, rgba(59, 41, 130, 0.4), transparent 60%),
-    var(--bg);
+  background: linear-gradient(160deg, #4c1d95 0%, #7e22ce 45%, #a21caf 100%);
   background-attachment: fixed;
   color: var(--text);
   overscroll-behavior-y: none;

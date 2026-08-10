@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, trackTitle, type DriveItem, type Track } from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
+import { TrackArt } from './TrackArt';
+import { PauseIcon, PlayIcon } from './icons';
 
 const FOLDER_ICON = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -135,18 +137,11 @@ export function Library() {
                   className={`item-row track-row ${isCurrent ? 'playing' : ''}`}
                   onClick={() => playQueue(displayedTracks, i)}
                 >
-                  <span className="track-num">
-                    {isCurrent && isPlaying ? (
-                      <span className="eq-bars" aria-hidden="true">
-                        <span />
-                        <span />
-                        <span />
-                      </span>
-                    ) : (
-                      i + 1
-                    )}
-                  </span>
+                  <TrackArt trackId={track.id} playing={isCurrent && isPlaying} size="sm" />
                   <span className="item-name">{trackTitle(track)}</span>
+                  <span className="track-play-icon" aria-hidden="true">
+                    {isCurrent && isPlaying ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
+                  </span>
                 </button>
               </li>
             );
