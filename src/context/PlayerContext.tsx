@@ -27,6 +27,7 @@ interface PlayerContextValue {
   screenOpen: boolean;
   openScreen: () => void;
   closeScreen: () => void;
+  getAnalyser: () => AnalyserNode | null;
   playQueue: (tracks: Track[], startIndex: number) => void;
   togglePlay: () => void;
   playNext: () => void;
@@ -69,6 +70,31 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
   const openScreen = useCallback(() => setScreenOpen(true), []);
   const closeScreen = useCallback(() => setScreenOpen(false), []);
+
+  // Created lazily (not at app boot) since AudioContext needs a user
+  // gesture to start, and createMediaElementSource can only ever be called
+  // once per audio element for its whole lifetime.
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+
+  const getAnalyser = useCallback((): AnalyserNode | null => {
+    const audio = audioRef.current;
+    if (!audio) return null;
+    let ctx = audioContextRef.current;
+    if (!ctx) {
+      ctx = new AudioContext();
+      const source = ctx.createMediaElementSource(audio);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      source.connect(analyser);
+      analyser.connect(ctx.destination);
+      audioContextRef.current = ctx;
+      analyserRef.current = analyser;
+    }
+    if (ctx.state === 'suspended') void ctx.resume();
+    return analyserRef.current;
+  }, []);
 
   const currentIndex = order[orderPos] ?? -1;
   const currentTrack = currentIndex >= 0 ? queue[currentIndex] : null;
@@ -261,6 +287,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       screenOpen,
       openScreen,
       closeScreen,
+      getAnalyser,
       playQueue,
       togglePlay,
       playNext,
@@ -285,6 +312,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       screenOpen,
       openScreen,
       closeScreen,
+      getAnalyser,
       playQueue,
       togglePlay,
       playNext,

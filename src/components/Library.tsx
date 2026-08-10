@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, trackTitle, type DriveItem, type Track } from '../lib/drive';
+import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, type DriveItem, type Track } from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
-import { TrackArt } from './TrackArt';
-import { PauseIcon, PlayIcon } from './icons';
+import { TrackRow } from './TrackRow';
+import { AddToPlaylistSheet } from './AddToPlaylistSheet';
 
 const FOLDER_ICON = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -24,6 +24,7 @@ export function Library() {
   const [searching, setSearching] = useState(false);
 
   const { playQueue, currentTrack, isPlaying } = usePlayer();
+  const [addingTrack, setAddingTrack] = useState<Track | null>(null);
 
   const loadFolder = useCallback(async (id: string) => {
     setLoading(true);
@@ -129,25 +130,21 @@ export function Library() {
 
       {displayedTracks.length > 0 && (
         <ul className="item-list track-list">
-          {displayedTracks.map((track, i) => {
-            const isCurrent = currentTrack?.id === track.id;
-            return (
-              <li key={track.id}>
-                <button
-                  className={`item-row track-row ${isCurrent ? 'playing' : ''}`}
-                  onClick={() => playQueue(displayedTracks, i)}
-                >
-                  <TrackArt trackId={track.id} playing={isCurrent && isPlaying} size="sm" />
-                  <span className="item-name">{trackTitle(track)}</span>
-                  <span className="track-play-icon" aria-hidden="true">
-                    {isCurrent && isPlaying ? <PauseIcon size={18} /> : <PlayIcon size={18} />}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
+          {displayedTracks.map((track, i) => (
+            <li key={track.id}>
+              <TrackRow
+                track={track}
+                isCurrent={currentTrack?.id === track.id}
+                isPlaying={isPlaying}
+                onClick={() => playQueue(displayedTracks, i)}
+                onAddToPlaylist={setAddingTrack}
+              />
+            </li>
+          ))}
         </ul>
       )}
+
+      {addingTrack && <AddToPlaylistSheet track={addingTrack} onClose={() => setAddingTrack(null)} />}
     </div>
   );
 }

@@ -23,6 +23,61 @@
   padding: 0 16px 24px;
 }
 
+/* Playlists */
+.playlist-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.playlist-detail-header h2 {
+  margin: 0;
+  font-size: 18px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Add-to-playlist bottom sheet */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: #2a1256;
+  border-radius: 20px 20px 0 0;
+  padding: 16px 16px max(16px, env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.6);
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sheet-header h3 {
+  margin: 0;
+  font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
 /* Bottom tab bar */
 .bottom-nav {
   display: flex;
@@ -111,22 +166,37 @@
 .item-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   width: 100%;
   text-align: left;
-  padding: 12px 14px;
+  padding: 6px 8px 6px 14px;
   border-radius: 14px;
   font-size: 15px;
   transition: background-color 0.15s ease;
 }
 
-.item-row:active {
+.item-row.folder-row {
+  padding: 12px 14px;
+  gap: 12px;
+}
+
+.item-row:active,
+.item-row:hover {
   background: var(--surface);
 }
 
-.folder-row:hover,
-.track-row:hover {
-  background: var(--surface);
+.track-click-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 6px 0;
+}
+
+.track-side-action {
+  color: var(--text-dim);
 }
 
 .item-icon {
@@ -138,6 +208,28 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.track-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.track-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.track-duration {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 .track-row.playing {
@@ -159,14 +251,30 @@
   color: var(--accent-2);
 }
 
-/* Track art (colored placeholder thumbnail, since Drive has no album art) */
+/* Track art: real cover image when available, colored gradient fallback otherwise */
 .track-art {
+  position: relative;
   flex-shrink: 0;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.track-art-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.track-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .track-art-sm {
@@ -364,6 +472,12 @@
   margin: 0;
   font-size: 22px;
   font-weight: 700;
+}
+
+.np-artist {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-dim);
 }
 
 .np-progress {

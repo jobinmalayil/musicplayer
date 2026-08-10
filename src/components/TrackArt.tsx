@@ -12,11 +12,17 @@ interface TrackArtProps {
   trackId: string;
   playing?: boolean;
   size?: 'sm' | 'lg';
+  coverUrl?: string;
 }
 
-export function TrackArt({ trackId, playing = false, size = 'sm' }: TrackArtProps) {
+export function TrackArt({ trackId, playing = false, size = 'sm', coverUrl }: TrackArtProps) {
   return (
-    <div className={`track-art track-art-${size}`} style={{ backgroundImage: trackGradient(trackId) }}>
+    <div
+      className={`track-art track-art-${size} ${coverUrl ? 'has-cover' : ''}`}
+      style={coverUrl ? undefined : { backgroundImage: trackGradient(trackId) }}
+    >
+      {coverUrl && <img className="track-art-img" src={coverUrl} alt="" />}
+      {playing && (coverUrl ? <span className="track-art-scrim" aria-hidden="true" /> : null)}
       {playing ? (
         <span className="eq-bars" aria-hidden="true">
           <span />
@@ -24,7 +30,7 @@ export function TrackArt({ trackId, playing = false, size = 'sm' }: TrackArtProp
           <span />
         </span>
       ) : (
-        NOTE_ICON
+        !coverUrl && NOTE_ICON
       )}
     </div>
   );

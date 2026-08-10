@@ -29,6 +29,14 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
+        injectManifest: {
+          // Audio chunks are cached individually by the SW itself at
+          // runtime (see src/sw.ts) — precaching only needs the app shell.
+          globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
+        },
         manifest: {
           name: 'Drive Music Player',
           short_name: 'DriveMusic',
@@ -55,17 +63,6 @@ export default defineConfig(({ mode }) => {
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
-            },
-          ],
-        },
-        workbox: {
-          // Audio streams and Drive data come from our own /api proxy; never
-          // let the SW cache/intercept those requests.
-          navigateFallbackDenylist: [/^\/api\//],
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
-              handler: 'NetworkOnly',
             },
           ],
         },

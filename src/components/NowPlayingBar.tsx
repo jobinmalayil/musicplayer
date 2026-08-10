@@ -1,5 +1,6 @@
 import { type CSSProperties } from 'react';
 import { usePlayer } from '../context/PlayerContext';
+import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { trackTitle } from '../lib/drive';
 import { TrackArt } from './TrackArt';
 import { NowPlayingScreen } from './NowPlayingScreen';
@@ -20,6 +21,8 @@ export function NowPlayingBar() {
     closeScreen,
   } = usePlayer();
 
+  const meta = useTrackMetadata(currentTrack?.id ?? '', currentTrack?.mimeType ?? '');
+
   if (!currentTrack) return null;
 
   const progressPct = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
@@ -31,8 +34,8 @@ export function NowPlayingBar() {
         <div className="mini-progress" style={{ '--progress': `${progressPct}%` } as CSSProperties} />
         <div className="controls-row">
           <button className="track-info" onClick={openScreen}>
-            <TrackArt trackId={currentTrack.id} playing={isPlaying} size="sm" />
-            <span className="track-title">{isLoading ? 'Loading…' : trackTitle(currentTrack)}</span>
+            <TrackArt trackId={currentTrack.id} playing={isPlaying} size="sm" coverUrl={meta.coverUrl} />
+            <span className="track-title">{isLoading ? 'Loading…' : meta.title || trackTitle(currentTrack)}</span>
           </button>
           <div className="transport">
             <button className="icon-btn" onClick={playPrevious} aria-label="Previous">

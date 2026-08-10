@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
+import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { trackTitle } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { TrackArt } from './TrackArt';
+import { TrackRow } from './TrackRow';
 import { WaveformProgress } from './WaveformProgress';
 import { ChevronDownIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, RepeatIcon, ShuffleIcon } from './icons';
 
@@ -25,6 +27,7 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
   } = usePlayer();
 
   const [tab, setTab] = useState<'playing' | 'queue'>('playing');
+  const meta = useTrackMetadata(currentTrack?.id ?? '', currentTrack?.mimeType ?? '');
 
   if (!currentTrack) return null;
 
@@ -48,10 +51,11 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
       {tab === 'playing' ? (
         <div className="np-body">
           <div className="np-art">
-            <TrackArt trackId={currentTrack.id} playing={isPlaying} size="lg" />
+            <TrackArt trackId={currentTrack.id} playing={isPlaying} size="lg" coverUrl={meta.coverUrl} />
           </div>
           <div className="np-meta">
-            <h2 className="np-title">{trackTitle(currentTrack)}</h2>
+            <h2 className="np-title">{meta.title || trackTitle(currentTrack)}</h2>
+            {meta.artist && <p className="np-artist">{meta.artist}</p>}
           </div>
 
           <div className="np-progress">
@@ -88,13 +92,13 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
         <ul className="item-list np-queue-list">
           {queue.map((track, i) => (
             <li key={track.id}>
-              <button
-                className={`item-row track-row ${currentTrack.id === track.id ? 'playing' : ''}`}
+              <TrackRow
+                track={track}
+                isCurrent={currentTrack.id === track.id}
+                isPlaying={isPlaying}
                 onClick={() => playQueue(queue, i)}
-              >
-                <TrackArt trackId={track.id} playing={isPlaying && currentTrack.id === track.id} size="sm" />
-                <span className="item-name">{trackTitle(track)}</span>
-              </button>
+                showPlayIcon={false}
+              />
             </li>
           ))}
         </ul>
