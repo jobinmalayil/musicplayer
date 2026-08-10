@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  findFolderByName,
-  getBreadcrumb,
-  listFolder,
-  searchTracks,
-  trackTitle,
-  type DriveItem,
-  type Track,
-} from '../lib/drive';
+import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, trackTitle, type DriveItem, type Track } from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
-
-const DEFAULT_FOLDER_NAME = 'jobin music';
 
 const FOLDER_ICON = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -19,13 +9,13 @@ const FOLDER_ICON = (
 );
 
 export function Library() {
+  const [rootFolderId, setRootFolderId] = useState<string | null>(null);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<DriveItem[]>([]);
   const [folders, setFolders] = useState<DriveItem[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [defaultFolderWarning, setDefaultFolderWarning] = useState<string | null>(null);
 
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[] | null>(null);
@@ -48,19 +38,18 @@ export function Library() {
     }
   }, []);
 
-  // On first load, jump straight into the default folder instead of showing My Drive root.
+  // Jump straight into the app's configured root folder on first load.
   useEffect(() => {
     let cancelled = false;
-    findFolderByName(DEFAULT_FOLDER_NAME)
-      .then((folder) => {
+    getRootFolderId()
+      .then((id) => {
         if (cancelled) return;
-        if (!folder) setDefaultFolderWarning(`Folder "${DEFAULT_FOLDER_NAME}" not found — showing My Drive instead.`);
-        setFolderId(folder?.id ?? 'root');
+        setRootFolderId(id);
+        setFolderId(id);
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to locate default folder');
-        setFolderId('root');
+        setError(err instanceof Error ? err.message : 'Failed to locate the shared folder');
       });
     return () => {
       cancelled = true;
@@ -100,10 +89,10 @@ export function Library() {
         />
       </div>
 
-      {searchResults === null && (
+      {searchResults === null && rootFolderId && (
         <nav className="breadcrumb">
-          <button onClick={() => setFolderId('root')} className={folderId === 'root' ? 'active' : ''}>
-            My Drive
+          <button onClick={() => setFolderId(rootFolderId)} className={folderId === rootFolderId ? 'active' : ''}>
+            Home
           </button>
           {breadcrumb.map((crumb) => (
             <span key={crumb.id}>
@@ -117,7 +106,6 @@ export function Library() {
       )}
 
       {error && <p className="error-text">{error}</p>}
-      {defaultFolderWarning && <p className="hint-text">{defaultFolderWarning}</p>}
       {(loading || searching) && <p className="hint-text">Loading…</p>}
 
       {searchResults === null && !loading && folders.length > 0 && (

@@ -8,72 +8,82 @@ A music player that streams your library straight from Google Drive. React + Vit
 - Full player: play/pause, next/previous, seek, shuffle, repeat (off / all / one)
 - Lock-screen / notification media controls via the Media Session API
 - Installable PWA — "Add to Home Screen" on iOS gives it a standalone, full-screen app experience
-- No server/backend required — everything runs client-side against the Google Drive API
+- Fully public, no login required for visitors — a small serverless proxy handles Google auth server-side
 
-## 1. Google Cloud setup
+> **This app has no access control.** Anyone with the site's URL can browse and stream everything in the configured folder — there's no Google sign-in and no password. Only put music you're fine making public into that folder.
 
-You need your own OAuth client ID (it's free, just a few clicks):
+## How it works
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and create a new project (or pick an existing one).
-2. **APIs & Services → Library** — search for **Google Drive API** and click **Enable**.
-3. **APIs & Services → OAuth consent screen**:
-   - User type: **External** (unless you have a Google Workspace org, then Internal works too).
-   - Fill in the app name, your email as support contact, and your email again as developer contact.
-   - Scopes: you can skip adding scopes here — the app requests `drive.readonly` at runtime.
-   - Test users: add your own Google account. While the app is in "Testing" status only these accounts can sign in, which is exactly what you want for personal use.
-4. **APIs & Services → Credentials → Create Credentials → OAuth client ID**:
-   - Application type: **Web application**.
-   - **Authorized JavaScript origins**: add `http://localhost:5173` for local dev, plus your production URL once you deploy (e.g. `https://your-app.vercel.app`).
-   - No redirect URI is needed (the app uses the token/popup flow, not a redirect).
-   - Copy the generated **Client ID**.
+Google's Drive API doesn't support truly anonymous access, even to files shared "Anyone with the link" — that sharing mode only works for people opening the link in Drive's own web app. So instead, a tiny serverless function ([api/drive.ts](api/drive.ts)) authenticates to Google as a **service account** (a credential you control, kept server-side only) and proxies list/search/breadcrumb/stream requests. Visitors never see any Google auth at all — the app just works.
 
-> Note: while the OAuth consent screen is in "Testing" status, Google shows an "unverified app" warning on first sign-in and access tokens must be refreshed via re-consent roughly every 7 days. For personal use this is fine — just click "Advanced → Go to [app name] (unsafe)" once. Submitting the app for verification removes both limitations if you ever want to share it with others.
+- **Browsing**: the proxy calls Drive's `files.list`/`files.get` using the service account's token.
+- **Streaming**: [api/_driveHandler.ts](api/_driveHandler.ts) forwards the browser's `Range` header to Drive and streams the response back (capped per-request to stay under serverless response-size limits — the player just requests more as needed, so seeking still works normally).
+- **Local dev**: [vite.config.ts](vite.config.ts) mounts the exact same handler as Vite dev-server middleware, so `npm run dev` behaves identically to the deployed version — no need for the Vercel CLI locally.
+- **Playback engine**: [src/context/PlayerContext.tsx](src/context/PlayerContext.tsx) manages the queue, shuffle order, repeat mode, and wires the Media Session API for lock-screen controls.
 
-## 2. Configure the app
+## 1. Enable the Drive API
+
+[Google Cloud Console](https://console.cloud.google.com/) → your project → **APIs & Services → Library** → search **Google Drive API** → **Enable**.
+
+## 2. Create a service account + key
+
+1. **APIs & Services → Credentials → Create Credentials → Service account**. Any name is fine → Create and continue → skip the optional steps → Done.
+2. Click into it → **Keys** tab → **Add Key → Create new key → JSON**. This downloads a `.json` file — keep it private, don't commit it anywhere.
+3. If key creation is blocked with *"Service account key creation is disabled"* (a Google "secure by default" org policy), go to:
+   ```
+   https://console.cloud.google.com/iam-admin/orgpolicies/iam-disableServiceAccountKeyCreation?project=YOUR_PROJECT_ID
+   ```
+   and override the policy to allow it for this project, then retry step 2.
+4. Open the downloaded JSON — you need its `client_email` and `private_key` values.
+
+## 3. Share your folder with the service account
+
+In Google Drive, open the folder you want the app to serve → **Share** → add the service account's `client_email` as **Viewer**.
+
+Also grab that folder's ID from its URL: `drive.google.com/drive/folders/THIS_PART`.
+
+## 4. Configure the app
 
 ```bash
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and paste your client ID:
+Fill in `.env.local`:
 
 ```
-VITE_GOOGLE_CLIENT_ID=xxxxxxxx.apps.googleusercontent.com
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_DRIVE_ROOT_FOLDER_ID=your-folder-id
 ```
 
-## 3. Run it
+The private key is the JSON file's `private_key` field pasted as-is (it already contains literal `\n` sequences) — no `VITE_` prefix on any of these, since they must never reach the browser bundle.
+
+## 5. Run it
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the printed local URL, click **Connect Google Drive**, and approve access. Your Drive folders and audio files (mp3, m4a, flac, wav, etc.) will show up in the library view.
+Open the printed local URL — the library loads immediately, no login screen.
 
-## 4. Deploy
-
-Build a static bundle and host it anywhere that serves static files (Vercel, Netlify, GitHub Pages, Cloudflare Pages, etc.):
+## 6. Deploy
 
 ```bash
 npm run build
 ```
 
-Deploy the `dist/` folder. Remember to:
-- Add the deployed origin to **Authorized JavaScript origins** in the Google Cloud OAuth client.
-- Set `VITE_GOOGLE_CLIENT_ID` as an environment variable in your hosting provider's build settings (it's read at build time).
+On Vercel (or any host that supports Node serverless functions alongside static hosting):
+- Deploy the repo as-is — Vercel auto-detects `api/drive.ts` as a serverless function.
+- Set `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, and `GOOGLE_DRIVE_ROOT_FOLDER_ID` as **environment variables** in your project settings (not as build-time `VITE_` vars — these are read at request time by the serverless function).
+- If your host has its own access-protection feature enabled (e.g. Vercel's Deployment Protection), turn it off if you want the public/no-login experience — otherwise visitors hit your host's login wall before ever reaching the app.
 
-## 5. Add to iOS home screen
+## 7. Add to iOS home screen
 
 Open the deployed site in **Safari** on iPhone/iPad → Share → **Add to Home Screen**. It launches full-screen, without Safari's browser chrome, using the app icon and name configured in the manifest.
-
-## How it works
-
-- **Auth**: Google Identity Services (`accounts.google.com/gsi/client`) issues a short-lived OAuth access token for the `drive.readonly` scope. No refresh token/backend is involved — the token is kept in `sessionStorage` and silently re-requested as it nears expiry. See [src/lib/googleAuth.ts](src/lib/googleAuth.ts).
-- **Browsing**: [src/lib/drive.ts](src/lib/drive.ts) calls the Drive v3 REST API (`files.list`) to list folders/audio files and to search by name.
-- **Streaming**: audio bytes are fetched with the access token attached as an `Authorization` header, then played from an in-memory `blob:` URL (the `<audio>` element can't send custom headers directly, so a direct Drive `alt=media` URL wouldn't work without this step).
-- **Playback engine**: [src/context/PlayerContext.tsx](src/context/PlayerContext.tsx) manages the queue, shuffle order, repeat mode, and wires the Media Session API for lock-screen controls.
 
 ## Limitations
 
 - Drive doesn't expose ID3 tags via its API, so track titles come from the filename (extension stripped) rather than embedded artist/album metadata.
-- Tracks are downloaded fully (not range-streamed) before playback starts, which is fine for typical song-length files but means very large files take longer to start.
+- No access control of any kind — see the warning above.
+- Each streamed request is capped at 4MB; large files just take a couple of extra round trips rather than one, which is invisible in normal playback but means very slow connections may see brief pauses between chunks.

@@ -134,27 +134,30 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !currentTrack) return;
-    let cancelled = false;
     setIsLoading(true);
     setError(null);
-    getTrackStreamUrl(currentTrack.id)
-      .then((url) => {
-        if (cancelled) return;
-        audio.src = url;
-        audio.volume = volume;
-        if (isPlaying) void audio.play().catch(() => {});
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load track');
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    audio.src = getTrackStreamUrl(currentTrack.id);
+    audio.volume = volume;
+    if (isPlaying) void audio.play().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTrack?.id]);
+
+  // Clear the loading flag once the browser has enough of the stream to play.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onCanPlay = () => setIsLoading(false);
+    const onError = () => {
+      setIsLoading(false);
+      setError('Failed to load track');
+    };
+    audio.addEventListener('canplay', onCanPlay);
+    audio.addEventListener('error', onError);
+    return () => {
+      audio.removeEventListener('canplay', onCanPlay);
+      audio.removeEventListener('error', onError);
+    };
+  }, []);
 
   // Reflect isPlaying state onto the audio element.
   useEffect(() => {
