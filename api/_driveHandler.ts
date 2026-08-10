@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { getServiceAccountToken } from './_driveAuth.ts';
+import { getServiceAccountToken } from './_driveAuth.js';
 
 const API_BASE = 'https://www.googleapis.com/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
