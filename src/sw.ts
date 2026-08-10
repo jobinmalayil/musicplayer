@@ -31,12 +31,38 @@ const rangeAwareCacheKey: WorkboxPlugin = {
   },
 };
 
+// The Cache API refuses to store a raw 206 Partial Content response
+// directly (this is exactly what workbox-range-requests works around for
+// the "one full cached file" case). Since we cache each range separately
+// anyway, the fix here is simpler: store it as a fabricated 200, then
+// restore the 206 status + Content-Range when serving it back from cache
+// so the <audio> element still sees a valid partial response.
+const partialResponseCacheFix: WorkboxPlugin = {
+  cacheWillUpdate: async ({ response }) => {
+    if (response.status !== 206) return response;
+    return new Response(response.body, {
+      status: 200,
+      statusText: 'OK',
+      headers: response.headers,
+    });
+  },
+  cachedResponseWillBeUsed: async ({ cachedResponse }) => {
+    if (!cachedResponse || !cachedResponse.headers.has('content-range')) return cachedResponse;
+    return new Response(cachedResponse.body, {
+      status: 206,
+      statusText: 'Partial Content',
+      headers: cachedResponse.headers,
+    });
+  },
+};
+
 registerRoute(
   ({ url }) => url.pathname === '/api/drive' && url.searchParams.get('action') === 'stream',
   new CacheFirst({
     cacheName: 'audio-stream-cache',
     plugins: [
       rangeAwareCacheKey,
+      partialResponseCacheFix,
       new CacheableResponsePlugin({ statuses: [0, 200, 206] }),
       new ExpirationPlugin({ maxEntries: 150, maxAgeSeconds: 60 * 60 * 24 * 30 }),
     ],
