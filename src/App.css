@@ -36,6 +36,21 @@
   font-size: 14px;
 }
 
+/* Public share player (unauthenticated visitor opening a shared-song link) */
+.share-player-card {
+  max-width: 380px;
+  align-items: center;
+  gap: 20px;
+}
+
+.share-player-progress {
+  width: 100%;
+}
+
+.share-player-cta {
+  margin-top: 4px;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;

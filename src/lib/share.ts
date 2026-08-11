@@ -1,18 +1,31 @@
-import { trackTitle, type Track } from './drive';
+import { getShareToken, trackTitle, type Track } from './drive';
 
-export function buildTrackShareUrl(track: Track): string {
+export function buildTrackShareUrl(track: Track, token?: string): string {
   const url = new URL(window.location.href);
   url.search = '';
   url.hash = '';
   url.searchParams.set('track', track.id);
+  if (token) url.searchParams.set('t', token);
   return url.toString();
 }
 
 export type ShareResult = 'shared' | 'copied' | 'failed';
 
-/** Opens the native share sheet when available, otherwise copies the link to the clipboard. */
+/**
+ * Mints a link that plays this one track for anyone who opens it — no
+ * sign-in required — then opens the native share sheet when available,
+ * otherwise copies the link to the clipboard.
+ */
 export async function shareTrack(track: Track): Promise<ShareResult> {
-  const url = buildTrackShareUrl(track);
+  let token: string | undefined;
+  try {
+    ({ token } = await getShareToken(track.id));
+  } catch {
+    // Minting failed (e.g. offline) — still offer a link, just one that
+    // requires the recipient to sign in rather than playing instantly.
+  }
+
+  const url = buildTrackShareUrl(track, token);
   const title = trackTitle(track);
 
   if (navigator.share) {

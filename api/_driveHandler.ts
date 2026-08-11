@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getServiceAccountToken } from './_driveAuth.js';
-import { isAuthenticated } from './_session.js';
+import { createShareToken, isAuthenticated, verifyShareToken } from './_session.js';
 
 const API_BASE = 'https://www.googleapis.com/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -140,15 +140,35 @@ async function streamTrack(req: IncomingMessage, res: ServerResponse, fileId: st
 const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ?? 'root';
 
 export async function handleDriveRequest(req: IncomingMessage, res: ServerResponse) {
-  if (!isAuthenticated(req.headers.cookie)) {
+  const url = new URL(req.url ?? '/', 'http://internal');
+  const action = url.searchParams.get('action');
+  const id = url.searchParams.get('id');
+  const shareToken = url.searchParams.get('t');
+
+  // A share link's token only ever unlocks streaming/metadata for the one
+  // track it was minted for — every other action still needs a real session.
+  const authed = isAuthenticated(req.headers.cookie);
+  const tokenGranted =
+    (action === 'stream' || action === 'file') && !!id && !!shareToken && verifyShareToken(shareToken, id);
+
+  if (!authed && !tokenGranted) {
     sendJson(res, 401, { error: 'Unauthorized' });
     return;
   }
 
-  const url = new URL(req.url ?? '/', 'http://internal');
-  const action = url.searchParams.get('action');
-
   try {
+    if (action === 'share-token') {
+      if (!authed) {
+        sendJson(res, 403, { error: 'Sign in required' });
+        return;
+      }
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      sendJson(res, 200, { token: createShareToken(id) });
+      return;
+    }
     if (action === 'list') {
       const folderId = url.searchParams.get('folderId') || ROOT_FOLDER_ID;
       sendJson(res, 200, await listFolder(folderId));
@@ -165,7 +185,6 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
       return;
     }
     if (action === 'stream') {
-      const id = url.searchParams.get('id');
       if (!id) {
         sendJson(res, 400, { error: 'Missing id' });
         return;
@@ -174,7 +193,6 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
       return;
     }
     if (action === 'file') {
-      const id = url.searchParams.get('id');
       if (!id) {
         sendJson(res, 400, { error: 'Missing id' });
         return;

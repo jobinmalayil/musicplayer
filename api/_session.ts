@@ -69,3 +69,30 @@ export function getSession(cookieHeader: string | undefined): Session | null {
 export function isAuthenticated(cookieHeader: string | undefined): boolean {
   return getSession(cookieHeader) !== null;
 }
+
+const SHARE_TOKEN_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+/** Scoped to a single track — lets a share link stream just that one file without signing in. */
+export function createShareToken(trackId: string): string {
+  const payload = Buffer.from(
+    JSON.stringify({ trackId, exp: Date.now() + SHARE_TOKEN_MAX_AGE_MS }),
+  ).toString('base64url');
+  return `${payload}.${sign(payload)}`;
+}
+
+export function verifyShareToken(token: string, trackId: string): boolean {
+  const [payload, sig] = token.split('.');
+  if (!payload || !sig) return false;
+
+  const expected = sign(payload);
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return false;
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString()) as { trackId: string; exp: number };
+    return data.trackId === trackId && typeof data.exp === 'number' && data.exp > Date.now();
+  } catch {
+    return false;
+  }
+}

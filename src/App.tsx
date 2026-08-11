@@ -3,11 +3,13 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { PlaylistsProvider } from './context/PlaylistsContext';
 import { RecentlyPlayedProvider } from './context/RecentlyPlayedContext';
+import { setActiveShareToken } from './lib/drive';
 import { LoginScreen } from './components/LoginScreen';
 import { Home } from './components/Home';
 import { Library } from './components/Library';
 import { Playlists } from './components/Playlists';
 import { Admin } from './components/Admin';
+import { PublicSharePlayer } from './components/PublicSharePlayer';
 import { NowPlayingBar } from './components/NowPlayingBar';
 import { RecentlyPlayedTracker } from './components/RecentlyPlayedTracker';
 import { SharedTrackHandler } from './components/SharedTrackHandler';
@@ -28,7 +30,21 @@ function AppShell() {
   const ActiveView = VIEWS[activeView];
 
   if (checking) return null;
-  if (!signedIn) return <LoginScreen />;
+
+  if (!signedIn) {
+    const params = new URLSearchParams(window.location.search);
+    const sharedTrackId = params.get('track');
+    const shareToken = params.get('t');
+    if (sharedTrackId && shareToken) {
+      setActiveShareToken(shareToken);
+      return (
+        <PlayerProvider>
+          <PublicSharePlayer trackId={sharedTrackId} />
+        </PlayerProvider>
+      );
+    }
+    return <LoginScreen />;
+  }
 
   return (
     <PlayerProvider>

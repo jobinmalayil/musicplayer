@@ -25,10 +25,20 @@ export function sortTracksByTitle(tracks: Track[]): Track[] {
   return [...tracks].sort((a, b) => trackTitle(a).localeCompare(trackTitle(b), undefined, { numeric: true }));
 }
 
+// Set once, up front, for an unauthenticated visitor opening a shared-song
+// link — every request in that mode carries it, which is safe because the
+// server only ever honors it for that one track's `file`/`stream` actions.
+let activeShareToken: string | null = null;
+
+export function setActiveShareToken(token: string | null) {
+  activeShareToken = token;
+}
+
 async function apiFetch<T>(action: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL('/api/drive', window.location.origin);
   url.searchParams.set('action', action);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
+  if (activeShareToken) url.searchParams.set('t', activeShareToken);
   const res = await fetch(url);
   if (!res.ok) {
     const body = await res.text();
@@ -63,7 +73,13 @@ export function getFile(id: string): Promise<Track> {
   return apiFetch('file', { id });
 }
 
+/** Mints a signed link (valid ~30 days) that lets anyone stream just this one track without signing in. */
+export function getShareToken(id: string): Promise<{ token: string }> {
+  return apiFetch('share-token', { id });
+}
+
 /** Streams a track's audio through our proxy — no token, no blob download, real range-request seeking. */
 export function getTrackStreamUrl(trackId: string): string {
-  return `/api/drive?action=stream&id=${encodeURIComponent(trackId)}`;
+  const base = `/api/drive?action=stream&id=${encodeURIComponent(trackId)}`;
+  return activeShareToken ? `${base}&t=${encodeURIComponent(activeShareToken)}` : base;
 }
