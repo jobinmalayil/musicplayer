@@ -3,16 +3,19 @@ import { usePlayer } from '../context/PlayerContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { trackTitle } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
+import { shareTrack } from '../lib/share';
 import { TrackArt } from './TrackArt';
 import { TrackRow } from './TrackRow';
 import { WaveformProgress } from './WaveformProgress';
 import {
+  CheckIcon,
   ChevronDownIcon,
   NextIcon,
   PauseIcon,
   PlayIcon,
   PrevIcon,
   RepeatIcon,
+  ShareIcon,
   ShuffleIcon,
   VolumeIcon,
 } from './icons';
@@ -38,8 +41,18 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
   } = usePlayer();
 
   const [tab, setTab] = useState<'playing' | 'queue'>('playing');
+  const [justCopied, setJustCopied] = useState(false);
   const meta = useTrackMetadata(currentTrack);
   const lastVolumeRef = useRef(volume || 1);
+
+  const handleShare = async () => {
+    if (!currentTrack) return;
+    const result = await shareTrack(currentTrack);
+    if (result === 'copied') {
+      setJustCopied(true);
+      setTimeout(() => setJustCopied(false), 1500);
+    }
+  };
 
   const toggleMute = () => {
     if (volume > 0) {
@@ -66,7 +79,17 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
             Up Next
           </button>
         </div>
-        <span aria-hidden="true" />
+        {tab === 'playing' ? (
+          <button
+            className="icon-btn"
+            onClick={handleShare}
+            aria-label={justCopied ? 'Link copied' : 'Share'}
+          >
+            {justCopied ? <CheckIcon size={20} /> : <ShareIcon size={20} />}
+          </button>
+        ) : (
+          <span aria-hidden="true" />
+        )}
       </div>
 
       {tab === 'playing' ? (

@@ -10,6 +10,7 @@ import { Playlists } from './components/Playlists';
 import { Admin } from './components/Admin';
 import { NowPlayingBar } from './components/NowPlayingBar';
 import { RecentlyPlayedTracker } from './components/RecentlyPlayedTracker';
+import { SharedTrackHandler } from './components/SharedTrackHandler';
 import { BottomNav, type View } from './components/BottomNav';
 import './App.css';
 
@@ -34,6 +35,7 @@ function AppShell() {
       <PlaylistsProvider>
         <RecentlyPlayedProvider>
           <RecentlyPlayedTracker />
+          <SharedTrackHandler />
           <div className="app-shell">
             <main className="app-main">
               <ActiveView />

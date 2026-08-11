@@ -58,6 +58,11 @@ export function searchTracks(query: string): Promise<Track[]> {
   return apiFetch('search', { q: query });
 }
 
+/** Fetches a single file's metadata by id — used to resolve a shared-song deep link. */
+export function getFile(id: string): Promise<Track> {
+  return apiFetch('file', { id });
+}
+
 /** Streams a track's audio through our proxy — no token, no blob download, real range-request seeking. */
 export function getTrackStreamUrl(trackId: string): string {
   return `/api/drive?action=stream&id=${encodeURIComponent(trackId)}`;

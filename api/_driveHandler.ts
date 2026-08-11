@@ -53,6 +53,10 @@ async function listFolder(folderId: string) {
   };
 }
 
+async function getFile(fileId: string): Promise<DriveItem> {
+  return driveJson<DriveItem>(`/files/${fileId}`, { fields: 'id, name, mimeType, parents, size, modifiedTime' });
+}
+
 async function getBreadcrumb(folderId: string, rootFolderId: string): Promise<DriveItem[]> {
   const crumbs: DriveItem[] = [];
   let currentId: string | undefined = folderId;
@@ -167,6 +171,15 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
         return;
       }
       await streamTrack(req, res, id);
+      return;
+    }
+    if (action === 'file') {
+      const id = url.searchParams.get('id');
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      sendJson(res, 200, await getFile(id));
       return;
     }
     if (action === 'root') {
