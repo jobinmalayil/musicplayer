@@ -38,8 +38,8 @@ export default defineConfig(({ mode }) => {
           globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         },
         manifest: {
-          name: 'Drive Music Player',
-          short_name: 'DriveMusic',
+          name: 'Jobin Abraham Musically',
+          short_name: 'Musically',
           description: 'A music player backed by your Google Drive library',
           theme_color: '#0f0f13',
           background_color: '#0f0f13',
