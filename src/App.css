@@ -192,12 +192,11 @@
 .search-bar {
   position: sticky;
   top: 0;
-  padding: 4px 0 16px;
-  margin-bottom: -16px;
+  padding: 4px 0 14px;
   z-index: 1;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  mask-image: linear-gradient(black 75%, transparent);
+  mask-image: linear-gradient(black 88%, transparent);
 }
 
 .breadcrumb {
