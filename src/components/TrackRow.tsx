@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { usePlayCounts } from '../context/PlayCountsContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
-import { trackTitle, type Track } from '../lib/drive';
+import { hideTrack, trackTitle, unhideTrack, type Track } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { shareTrack } from '../lib/share';
 import { TrackArt } from './TrackArt';
-import { CheckIcon, HeadphonesIcon, PauseIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from './icons';
+import { CheckIcon, EyeIcon, EyeOffIcon, HeadphonesIcon, PauseIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from './icons';
 
 interface TrackRowProps {
   track: Track;
@@ -31,6 +32,9 @@ export function TrackRow({
   const [justCopied, setJustCopied] = useState(false);
   const { getCount } = usePlayCounts();
   const playCount = getCount(track.id);
+  const { isAdmin } = useAuth();
+  const [hidden, setHidden] = useState(track.hidden ?? false);
+  const [togglingHidden, setTogglingHidden] = useState(false);
 
   const handleShare = async () => {
     const result = await shareTrack(track);
@@ -40,8 +44,21 @@ export function TrackRow({
     }
   };
 
+  const handleToggleHidden = async () => {
+    const next = !hidden;
+    setHidden(next);
+    setTogglingHidden(true);
+    try {
+      await (next ? hideTrack(track.id) : unhideTrack(track.id));
+    } catch {
+      setHidden(!next);
+    } finally {
+      setTogglingHidden(false);
+    }
+  };
+
   return (
-    <div className={`item-row track-row ${isCurrent ? 'playing' : ''}`}>
+    <div className={`item-row track-row ${isCurrent ? 'playing' : ''} ${hidden ? 'track-hidden' : ''}`}>
       <button className="track-click-area" onClick={onClick}>
         <TrackArt trackId={track.id} playing={isCurrent && isPlaying} size="sm" coverUrl={meta.coverUrl} />
         <span className="track-text">
@@ -68,6 +85,16 @@ export function TrackRow({
       >
         {justCopied ? <CheckIcon size={18} /> : <ShareIcon size={18} />}
       </button>
+      {isAdmin && (
+        <button
+          className="icon-btn track-side-action"
+          onClick={handleToggleHidden}
+          disabled={togglingHidden}
+          aria-label={hidden ? `Unhide ${title}` : `Hide ${title}`}
+        >
+          {hidden ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+        </button>
+      )}
       {onAddToPlaylist && (
         <button className="icon-btn track-side-action" onClick={() => onAddToPlaylist(track)} aria-label="Add to playlist">
           <PlusIcon size={18} />

@@ -6,6 +6,8 @@ export interface DriveItem {
   iconLink?: string;
   size?: string;
   modifiedTime?: string;
+  /** Only ever set (and only ever seen by admins) when a track has been hidden from everyone else. */
+  hidden?: boolean;
 }
 
 export type Track = DriveItem;
@@ -92,4 +94,14 @@ export function recordPlay(id: string): Promise<{ count: number }> {
 /** Play counts for every track this app knows about, keyed by track id. */
 export function getPlayCounts(): Promise<Record<string, number>> {
   return apiFetch('play-counts');
+}
+
+/** Admin-only: hides a track from playback and browsing for everyone but admins. */
+export function hideTrack(id: string): Promise<{ hidden: true }> {
+  return apiFetch('hide-track', { id });
+}
+
+/** Admin-only: undoes hideTrack. */
+export function unhideTrack(id: string): Promise<{ hidden: false }> {
+  return apiFetch('unhide-track', { id });
 }

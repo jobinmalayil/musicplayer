@@ -460,6 +460,10 @@
   background: var(--surface);
 }
 
+.track-row.track-hidden {
+  opacity: 0.45;
+}
+
 .track-row.playing .item-name {
   color: var(--accent-2);
   font-weight: 600;

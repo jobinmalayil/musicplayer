@@ -1,7 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getServiceAccountToken } from './_driveAuth.js';
+import { getHiddenTrackIds, hideTrack, isTrackHidden, unhideTrack } from './_hiddenTracks.js';
 import { getPlayCounts, incrementPlayCount } from './_playCounts.js';
-import { createShareToken, isAuthenticated, verifyShareToken } from './_session.js';
+import { createShareToken, getSession, verifyShareToken } from './_session.js';
 
 const API_BASE = 'https://www.googleapis.com/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -17,6 +18,7 @@ interface DriveItem {
   name: string;
   mimeType: string;
   parents?: string[];
+  hidden?: boolean;
 }
 
 async function driveFetch(path: string, params: Record<string, string> = {}): Promise<Response> {
@@ -32,7 +34,8 @@ async function driveJson<T>(path: string, params?: Record<string, string>): Prom
   return res.json() as Promise<T>;
 }
 
-async function listFolder(folderId: string) {
+/** Raw, unfiltered folder contents — hidden-track filtering happens at the call sites below. */
+async function fetchFolderContents(folderId: string): Promise<{ folders: DriveItem[]; tracks: DriveItem[] }> {
   const q = `'${folderId}' in parents and trashed = false and (mimeType = '${FOLDER_MIME}' or mimeType contains 'audio/')`;
   const items: DriveItem[] = [];
   let pageToken: string | undefined;
@@ -52,6 +55,18 @@ async function listFolder(folderId: string) {
     folders: items.filter((i) => i.mimeType === FOLDER_MIME),
     tracks: items.filter((i) => i.mimeType.startsWith('audio/')),
   };
+}
+
+// Non-admins never even see a hidden track in a listing; admins see it
+// marked so they know what they've hidden and can toggle it back.
+function applyHiddenFilter(tracks: DriveItem[], hiddenIds: Set<string>, isAdmin: boolean): DriveItem[] {
+  const decorated = tracks.map((t) => (hiddenIds.has(t.id) ? { ...t, hidden: true } : t));
+  return isAdmin ? decorated : decorated.filter((t) => !hiddenIds.has(t.id));
+}
+
+async function listFolder(folderId: string, hiddenIds: Set<string>, isAdmin: boolean) {
+  const { folders, tracks } = await fetchFolderContents(folderId);
+  return { folders, tracks: applyHiddenFilter(tracks, hiddenIds, isAdmin) };
 }
 
 async function getFile(fileId: string): Promise<DriveItem> {
@@ -76,15 +91,21 @@ async function getBreadcrumb(folderId: string, rootFolderId: string): Promise<Dr
 // built as a recursive walk from the known root folder instead of relying
 // on Drive's global search for an account that owns nothing.
 async function getAllTracks(folderId: string): Promise<DriveItem[]> {
-  const { folders, tracks } = await listFolder(folderId);
+  const { folders, tracks } = await fetchFolderContents(folderId);
   const nested = await Promise.all(folders.map((f) => getAllTracks(f.id)));
   return [...tracks, ...nested.flat()];
 }
 
-async function searchTracks(query: string, rootFolderId: string): Promise<DriveItem[]> {
+async function searchTracks(
+  query: string,
+  rootFolderId: string,
+  hiddenIds: Set<string>,
+  isAdmin: boolean,
+): Promise<DriveItem[]> {
   const needle = query.toLowerCase();
   const all = await getAllTracks(rootFolderId);
-  return all.filter((t) => t.name.toLowerCase().includes(needle));
+  const matched = all.filter((t) => t.name.toLowerCase().includes(needle));
+  return applyHiddenFilter(matched, hiddenIds, isAdmin);
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {
@@ -148,7 +169,9 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
 
   // A share link's token only ever unlocks streaming/metadata for the one
   // track it was minted for — every other action still needs a real session.
-  const authed = isAuthenticated(req.headers.cookie);
+  const session = getSession(req.headers.cookie);
+  const authed = session !== null;
+  const isAdmin = session?.role === 'admin';
   const tokenGranted =
     (action === 'stream' || action === 'file' || action === 'record-play') &&
     !!id &&
@@ -175,7 +198,8 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
     }
     if (action === 'list') {
       const folderId = url.searchParams.get('folderId') || ROOT_FOLDER_ID;
-      sendJson(res, 200, await listFolder(folderId));
+      const hiddenIds = await getHiddenTrackIds();
+      sendJson(res, 200, await listFolder(folderId, hiddenIds, isAdmin));
       return;
     }
     if (action === 'breadcrumb') {
@@ -185,12 +209,17 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
     }
     if (action === 'search') {
       const query = url.searchParams.get('q') ?? '';
-      sendJson(res, 200, await searchTracks(query, ROOT_FOLDER_ID));
+      const hiddenIds = await getHiddenTrackIds();
+      sendJson(res, 200, await searchTracks(query, ROOT_FOLDER_ID, hiddenIds, isAdmin));
       return;
     }
     if (action === 'stream') {
       if (!id) {
         sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      if (!isAdmin && (await isTrackHidden(id))) {
+        sendJson(res, 403, { error: 'This track is unavailable' });
         return;
       }
       await streamTrack(req, res, id);
@@ -199,6 +228,10 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
     if (action === 'file') {
       if (!id) {
         sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      if (!isAdmin && (await isTrackHidden(id))) {
+        sendJson(res, 403, { error: 'This track is unavailable' });
         return;
       }
       sendJson(res, 200, await getFile(id));
@@ -222,6 +255,32 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
         return;
       }
       sendJson(res, 200, await getPlayCounts());
+      return;
+    }
+    if (action === 'hide-track') {
+      if (!isAdmin) {
+        sendJson(res, 403, { error: 'Admin access required' });
+        return;
+      }
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      await hideTrack(id);
+      sendJson(res, 200, { hidden: true });
+      return;
+    }
+    if (action === 'unhide-track') {
+      if (!isAdmin) {
+        sendJson(res, 403, { error: 'Admin access required' });
+        return;
+      }
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      await unhideTrack(id);
+      sendJson(res, 200, { hidden: false });
       return;
     }
     sendJson(res, 400, { error: `Unknown action: ${action}` });
