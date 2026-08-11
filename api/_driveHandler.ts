@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getServiceAccountToken } from './_driveAuth.js';
+import { getPlayCounts, incrementPlayCount } from './_playCounts.js';
 import { createShareToken, isAuthenticated, verifyShareToken } from './_session.js';
 
 const API_BASE = 'https://www.googleapis.com/drive/v3';
@@ -149,7 +150,10 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
   // track it was minted for — every other action still needs a real session.
   const authed = isAuthenticated(req.headers.cookie);
   const tokenGranted =
-    (action === 'stream' || action === 'file') && !!id && !!shareToken && verifyShareToken(shareToken, id);
+    (action === 'stream' || action === 'file' || action === 'record-play') &&
+    !!id &&
+    !!shareToken &&
+    verifyShareToken(shareToken, id);
 
   if (!authed && !tokenGranted) {
     sendJson(res, 401, { error: 'Unauthorized' });
@@ -202,6 +206,22 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
     }
     if (action === 'root') {
       sendJson(res, 200, { rootFolderId: ROOT_FOLDER_ID });
+      return;
+    }
+    if (action === 'record-play') {
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      sendJson(res, 200, { count: await incrementPlayCount(id) });
+      return;
+    }
+    if (action === 'play-counts') {
+      if (!authed) {
+        sendJson(res, 403, { error: 'Sign in required' });
+        return;
+      }
+      sendJson(res, 200, await getPlayCounts());
       return;
     }
     sendJson(res, 400, { error: `Unknown action: ${action}` });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
-import { getFile, trackTitle, type Track } from '../lib/drive';
+import { getFile, recordPlay, trackTitle, type Track } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { TrackArt } from './TrackArt';
 import { WaveformProgress } from './WaveformProgress';
@@ -19,6 +19,7 @@ function SharedTrack({ track }: { track: Track }) {
       togglePlay();
     } else {
       playQueue([track], 0);
+      void recordPlay(track.id).catch(() => {});
     }
   };
 

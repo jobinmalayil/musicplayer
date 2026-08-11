@@ -83,3 +83,13 @@ export function getTrackStreamUrl(trackId: string): string {
   const base = `/api/drive?action=stream&id=${encodeURIComponent(trackId)}`;
   return activeShareToken ? `${base}&t=${encodeURIComponent(activeShareToken)}` : base;
 }
+
+/** Bumps a track's global play count by one. */
+export function recordPlay(id: string): Promise<{ count: number }> {
+  return apiFetch('record-play', { id });
+}
+
+/** Play counts for every track this app knows about, keyed by track id. */
+export function getPlayCounts(): Promise<Record<string, number>> {
+  return apiFetch('play-counts');
+}

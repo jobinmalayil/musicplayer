@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { PlaylistsProvider } from './context/PlaylistsContext';
 import { RecentlyPlayedProvider } from './context/RecentlyPlayedContext';
+import { PlayCountsProvider } from './context/PlayCountsContext';
 import { setActiveShareToken } from './lib/drive';
 import { LoginScreen } from './components/LoginScreen';
 import { Home } from './components/Home';
@@ -11,7 +12,9 @@ import { Playlists } from './components/Playlists';
 import { Admin } from './components/Admin';
 import { PublicSharePlayer } from './components/PublicSharePlayer';
 import { NowPlayingBar } from './components/NowPlayingBar';
+import { PullToRefresh } from './components/PullToRefresh';
 import { RecentlyPlayedTracker } from './components/RecentlyPlayedTracker';
+import { PlayCountTracker } from './components/PlayCountTracker';
 import { SharedTrackHandler } from './components/SharedTrackHandler';
 import { BottomNav, type View } from './components/BottomNav';
 import './App.css';
@@ -50,15 +53,18 @@ function AppShell() {
     <PlayerProvider>
       <PlaylistsProvider>
         <RecentlyPlayedProvider>
-          <RecentlyPlayedTracker />
-          <SharedTrackHandler />
-          <div className="app-shell">
-            <main className="app-main">
-              <ActiveView />
-            </main>
-            <NowPlayingBar />
-            <BottomNav view={view} onChangeView={setView} />
-          </div>
+          <PlayCountsProvider>
+            <RecentlyPlayedTracker />
+            <PlayCountTracker />
+            <SharedTrackHandler />
+            <div className="app-shell">
+              <PullToRefresh>
+                <ActiveView />
+              </PullToRefresh>
+              <NowPlayingBar />
+              <BottomNav view={view} onChangeView={setView} />
+            </div>
+          </PlayCountsProvider>
         </RecentlyPlayedProvider>
       </PlaylistsProvider>
     </PlayerProvider>

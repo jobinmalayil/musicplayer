@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { Redis } from '@upstash/redis';
+import { redis } from './_redis.js';
 import type { Role } from './_session.js';
 
 const USERS_KEY = 'musically:users';
@@ -22,17 +22,6 @@ export function verifyPassword(password: string, stored: string): boolean {
   const hashBuf = Buffer.from(hash, 'hex');
   const candidateBuf = scryptSync(password, salt, 64);
   return hashBuf.length === candidateBuf.length && timingSafeEqual(hashBuf, candidateBuf);
-}
-
-let client: Redis | null = null;
-
-function redis(): Redis {
-  if (client) return client;
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
-  if (!url || !token) throw new Error('Missing KV_REST_API_URL / KV_REST_API_TOKEN');
-  client = new Redis({ url, token });
-  return client;
 }
 
 /** Seeds the very first admin from env vars — only used until any users are stored. */

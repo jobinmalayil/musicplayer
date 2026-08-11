@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { usePlayCounts } from '../context/PlayCountsContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { trackTitle, type Track } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { shareTrack } from '../lib/share';
 import { TrackArt } from './TrackArt';
-import { CheckIcon, PauseIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from './icons';
+import { CheckIcon, HeadphonesIcon, PauseIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from './icons';
 
 interface TrackRowProps {
   track: Track;
@@ -28,6 +29,8 @@ export function TrackRow({
   const meta = useTrackMetadata(track);
   const title = meta.title || trackTitle(track);
   const [justCopied, setJustCopied] = useState(false);
+  const { getCount } = usePlayCounts();
+  const playCount = getCount(track.id);
 
   const handleShare = async () => {
     const result = await shareTrack(track);
@@ -46,6 +49,12 @@ export function TrackRow({
           {meta.artist && <span className="track-subtitle">{meta.artist}</span>}
         </span>
         {meta.duration != null && <span className="track-duration">{formatTime(meta.duration)}</span>}
+        {playCount > 0 && (
+          <span className="track-play-count" title={`${playCount} play${playCount === 1 ? '' : 's'}`}>
+            <HeadphonesIcon size={12} />
+            {playCount}
+          </span>
+        )}
         {showPlayIcon && (
           <span className="track-play-icon" aria-hidden="true">
             {isCurrent && isPlaying ? <PauseIcon size={18} /> : <PlayIcon size={18} />}

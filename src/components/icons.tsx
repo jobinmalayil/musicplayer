@@ -8,6 +8,16 @@ export function PlayIcon({ size = 28 }: IconProps) {
   );
 }
 
+export function HeadphonesIcon({ size = 14 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+      <rect x="2" y="14" width="6" height="7" rx="2" />
+      <rect x="16" y="14" width="6" height="7" rx="2" />
+    </svg>
+  );
+}
+
 export function PauseIcon({ size = 28 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">

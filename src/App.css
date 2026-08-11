@@ -96,7 +96,37 @@
 .app-main {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   padding: 0 16px 24px;
+}
+
+/* Pull-to-refresh (standalone PWAs get no native browser gesture for this) */
+.pull-refresh-indicator {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  transition: height 0.15s ease;
+}
+
+.pull-refresh-spinner {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 10px;
+  border: 3px solid var(--surface-2);
+  border-top-color: var(--accent-2);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pull-refresh-spinner.spinning {
+  animation: pull-refresh-spin 0.7s linear infinite;
+}
+
+@keyframes pull-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Home */
@@ -412,6 +442,16 @@
 .track-duration {
   flex-shrink: 0;
   font-size: 12px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.track-play-count {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
