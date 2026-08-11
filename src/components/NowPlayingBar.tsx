@@ -21,7 +21,7 @@ export function NowPlayingBar() {
     closeScreen,
   } = usePlayer();
 
-  const meta = useTrackMetadata(currentTrack?.id ?? '', currentTrack?.mimeType ?? '');
+  const meta = useTrackMetadata(currentTrack);
 
   if (!currentTrack) return null;
 

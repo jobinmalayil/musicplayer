@@ -23,7 +23,7 @@ export function TrackRow({
   onAddToPlaylist,
   onRemove,
 }: TrackRowProps) {
-  const meta = useTrackMetadata(track.id, track.mimeType);
+  const meta = useTrackMetadata(track);
   const title = meta.title || trackTitle(track);
 
   return (

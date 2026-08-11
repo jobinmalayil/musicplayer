@@ -16,7 +16,7 @@ function greeting(): string {
 }
 
 function RecentCard({ track, onClick }: { track: Track; onClick: () => void }) {
-  const meta = useTrackMetadata(track.id, track.mimeType);
+  const meta = useTrackMetadata(track);
   return (
     <button className="hscroll-card" onClick={onClick}>
       <TrackArt trackId={track.id} size="md" coverUrl={meta.coverUrl} />

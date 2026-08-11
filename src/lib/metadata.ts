@@ -1,5 +1,6 @@
 import { parseBuffer, selectCover } from 'music-metadata';
-import { getTrackStreamUrl } from './drive';
+import { getTrackStreamUrl, trackTitle, type Track } from './drive';
+import { getAiArtUrl } from './aiArt';
 
 export interface TrackMetadata {
   title?: string;
@@ -16,21 +17,21 @@ const PARTIAL_FETCH_BYTES = 512 * 1024;
 
 const cache = new Map<string, Promise<TrackMetadata>>();
 
-export function getTrackMetadata(trackId: string, mimeType: string): Promise<TrackMetadata> {
-  if (!trackId) return Promise.resolve({});
-  const cached = cache.get(trackId);
+export function getTrackMetadata(track: Track): Promise<TrackMetadata> {
+  if (!track.id) return Promise.resolve({});
+  const cached = cache.get(track.id);
   if (cached) return cached;
 
   const promise = (async (): Promise<TrackMetadata> => {
     try {
-      const res = await fetch(getTrackStreamUrl(trackId), {
+      const res = await fetch(getTrackStreamUrl(track.id), {
         headers: { Range: `bytes=0-${PARTIAL_FETCH_BYTES - 1}` },
       });
       const buffer = new Uint8Array(await res.arrayBuffer());
       const contentRange = res.headers.get('content-range'); // "bytes 0-524287/4028151"
       const totalSize = contentRange ? Number(contentRange.split('/')[1]) || undefined : undefined;
 
-      const meta = await parseBuffer(buffer, { mimeType, size: totalSize });
+      const meta = await parseBuffer(buffer, { mimeType: track.mimeType, size: totalSize });
       const cover = selectCover(meta.common.picture);
 
       // For a CBR file parsed from a truncated buffer, music-metadata can
@@ -45,20 +46,25 @@ export function getTrackMetadata(trackId: string, mimeType: string): Promise<Tra
           ? (totalSize * 8) / meta.format.bitrate
           : meta.format.duration;
 
+      const title = meta.common.title || trackTitle(track);
+
       return {
         title: meta.common.title,
         artist: meta.common.artist,
         album: meta.common.album,
         duration,
+        // Drive rarely has embedded art for these devotional recordings —
+        // fall back to a free AI-generated cover instead of a plain
+        // gradient, seeded by track id so it's stable across renders.
         coverUrl: cover
           ? URL.createObjectURL(new Blob([Uint8Array.from(cover.data)], { type: cover.format }))
-          : undefined,
+          : getAiArtUrl(track.id, title),
       };
     } catch {
       return {};
     }
   })();
 
-  cache.set(trackId, promise);
+  cache.set(track.id, promise);
   return promise;
 }

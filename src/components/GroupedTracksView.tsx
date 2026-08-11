@@ -28,7 +28,7 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
       const rootId = await getRootFolderId();
       const { tracks } = await listFolder(rootId);
       if (cancelled) return;
-      const metas = await Promise.all(tracks.map((t) => getTrackMetadata(t.id, t.mimeType)));
+      const metas = await Promise.all(tracks.map((t) => getTrackMetadata(t)));
       if (cancelled) return;
 
       const byName = new Map<string, Track[]>();

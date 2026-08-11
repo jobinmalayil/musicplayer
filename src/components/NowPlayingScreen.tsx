@@ -27,7 +27,7 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
   } = usePlayer();
 
   const [tab, setTab] = useState<'playing' | 'queue'>('playing');
-  const meta = useTrackMetadata(currentTrack?.id ?? '', currentTrack?.mimeType ?? '');
+  const meta = useTrackMetadata(currentTrack);
 
   if (!currentTrack) return null;
 

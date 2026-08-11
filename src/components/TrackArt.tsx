@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { trackGradient } from '../lib/trackArt';
 
 const NOTE_ICON = (
@@ -16,13 +17,19 @@ interface TrackArtProps {
 }
 
 export function TrackArt({ trackId, playing = false, size = 'sm', coverUrl }: TrackArtProps) {
+  // The AI-art fallback has no uptime guarantee, so an image that fails to
+  // load just falls back to the plain gradient rather than a broken icon.
+  const [imgError, setImgError] = useState(false);
+  useEffect(() => setImgError(false), [coverUrl]);
+  const showCover = Boolean(coverUrl) && !imgError;
+
   return (
     <div
-      className={`track-art track-art-${size} ${coverUrl ? 'has-cover' : ''}`}
-      style={coverUrl ? undefined : { backgroundImage: trackGradient(trackId) }}
+      className={`track-art track-art-${size} ${showCover ? 'has-cover' : ''}`}
+      style={showCover ? undefined : { backgroundImage: trackGradient(trackId) }}
     >
-      {coverUrl && <img className="track-art-img" src={coverUrl} alt="" />}
-      {playing && (coverUrl ? <span className="track-art-scrim" aria-hidden="true" /> : null)}
+      {showCover && <img className="track-art-img" src={coverUrl} alt="" onError={() => setImgError(true)} />}
+      {playing && (showCover ? <span className="track-art-scrim" aria-hidden="true" /> : null)}
       {playing ? (
         <span className="eq-bars" aria-hidden="true">
           <span />
@@ -30,7 +37,7 @@ export function TrackArt({ trackId, playing = false, size = 'sm', coverUrl }: Tr
           <span />
         </span>
       ) : (
-        !coverUrl && NOTE_ICON
+        !showCover && NOTE_ICON
       )}
     </div>
   );
