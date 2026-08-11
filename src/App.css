@@ -1,3 +1,60 @@
+/* Login */
+.login-screen {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  max-width: 340px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.login-logo {
+  align-self: center;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.login-card p {
+  color: var(--text-dim);
+  margin: 0 0 8px;
+}
+
+.login-error {
+  color: var(--danger) !important;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--accent-grad);
+  color: #fff;
+  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-size: 16px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+}
+
+.btn-link {
+  color: var(--text-dim);
+  font-size: 13px;
+  text-decoration: underline;
+}
+
 /* App shell */
 .app-shell {
   height: 100%;
@@ -24,10 +81,18 @@
 }
 
 /* Home */
+.home-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: max(12px, env(safe-area-inset-top)) 0 20px;
+}
+
 .home-greeting {
   font-size: 24px;
   font-weight: 800;
-  margin: max(12px, env(safe-area-inset-top)) 0 20px;
+  margin: 0;
 }
 
 .home-section {

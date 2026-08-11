@@ -8,12 +8,23 @@ function driveApiDevMiddleware(env: Record<string, string>): Plugin {
   return {
     name: 'drive-api-dev-middleware',
     configureServer(server) {
-      for (const key of ['GOOGLE_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY', 'GOOGLE_DRIVE_ROOT_FOLDER_ID']) {
+      for (const key of [
+        'GOOGLE_SERVICE_ACCOUNT_EMAIL',
+        'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY',
+        'GOOGLE_DRIVE_ROOT_FOLDER_ID',
+        'APP_USERNAME',
+        'APP_PASSWORD',
+        'SESSION_SECRET',
+      ]) {
         if (env[key]) process.env[key] = env[key]
       }
       server.middlewares.use('/api/drive', async (req, res) => {
         const { handleDriveRequest } = await import('./api/_driveHandler.ts')
         await handleDriveRequest(req, res)
+      })
+      server.middlewares.use('/api/auth', async (req, res) => {
+        const { handleAuthRequest } = await import('./api/_authHandler.ts')
+        await handleAuthRequest(req, res)
       })
     },
   }

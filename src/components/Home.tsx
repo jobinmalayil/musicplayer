@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
 import { usePlaylists } from '../context/PlaylistsContext';
 import { useRecentlyPlayed } from '../context/RecentlyPlayedContext';
@@ -27,6 +28,7 @@ function RecentCard({ track, onClick }: { track: Track; onClick: () => void }) {
 }
 
 export function Home() {
+  const { disconnect } = useAuth();
   const { playQueue, currentTrack, isPlaying } = usePlayer();
   const { playlists } = usePlaylists();
   const { recentlyPlayed } = useRecentlyPlayed();
@@ -53,7 +55,12 @@ export function Home() {
 
   return (
     <div className="library">
-      <h1 className="home-greeting">{greeting()}</h1>
+      <div className="home-header-row">
+        <h1 className="home-greeting">{greeting()}</h1>
+        <button className="btn-link" onClick={disconnect}>
+          Sign out
+        </button>
+      </div>
 
       {recentlyPlayed.length > 0 && (
         <section className="home-section">

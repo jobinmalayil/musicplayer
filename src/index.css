@@ -40,7 +40,8 @@ button {
 }
 
 input[type='search'],
-input[type='text'] {
+input[type='text'],
+input[type='password'] {
   font-family: inherit;
   color: var(--text);
   background: var(--surface-2);

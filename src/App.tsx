@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { PlaylistsProvider } from './context/PlaylistsContext';
 import { RecentlyPlayedProvider } from './context/RecentlyPlayedContext';
+import { LoginScreen } from './components/LoginScreen';
 import { Home } from './components/Home';
 import { Library } from './components/Library';
 import { Playlists } from './components/Playlists';
@@ -16,9 +18,13 @@ const VIEWS: Record<View, () => React.JSX.Element> = {
   playlists: Playlists,
 };
 
-export default function App() {
+function AppShell() {
+  const { checking, signedIn } = useAuth();
   const [view, setView] = useState<View>('home');
   const ActiveView = VIEWS[view];
+
+  if (checking) return null;
+  if (!signedIn) return <LoginScreen />;
 
   return (
     <PlayerProvider>
@@ -35,5 +41,13 @@ export default function App() {
         </RecentlyPlayedProvider>
       </PlaylistsProvider>
     </PlayerProvider>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
   );
 }

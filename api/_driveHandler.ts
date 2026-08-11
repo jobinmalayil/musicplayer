@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getServiceAccountToken } from './_driveAuth.js';
+import { isAuthenticated } from './_session.js';
 
 const API_BASE = 'https://www.googleapis.com/drive/v3';
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
@@ -135,6 +136,11 @@ async function streamTrack(req: IncomingMessage, res: ServerResponse, fileId: st
 const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID ?? 'root';
 
 export async function handleDriveRequest(req: IncomingMessage, res: ServerResponse) {
+  if (!isAuthenticated(req.headers.cookie)) {
+    sendJson(res, 401, { error: 'Unauthorized' });
+    return;
+  }
+
   const url = new URL(req.url ?? '/', 'http://internal');
   const action = url.searchParams.get('action');
 
