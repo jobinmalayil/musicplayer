@@ -9,6 +9,7 @@ A music player that streams your library straight from Google Drive. React + Vit
 - Lock-screen / notification media controls via the Media Session API
 - Installable PWA — "Add to Home Screen" on iOS gives it a standalone, full-screen app experience
 - Gated behind username/password accounts you manage yourself from an in-app Admin tab — a serverless proxy handles Google auth server-side, so visitors never see a Google sign-in prompt, just your own login screen
+- Admins can hide individual tracks (invisible and unplayable for everyone else) and upload new songs straight into the shared Drive folder from the Admin tab
 
 ## How it works
 
@@ -18,6 +19,7 @@ Google's Drive API doesn't support truly anonymous access, even to files shared 
 - **Browsing**: the proxy calls Drive's `files.list`/`files.get` using the service account's token.
 - **Streaming**: [api/_driveHandler.ts](api/_driveHandler.ts) forwards the browser's `Range` header to Drive and streams the response back (capped per-request to stay under serverless response-size limits — the player just requests more as needed, so seeking still works normally).
 - **Local dev**: [vite.config.ts](vite.config.ts) mounts the exact same handlers as Vite dev-server middleware, so `npm run dev` behaves identically to the deployed version — no need for the Vercel CLI locally.
+- **Uploading**: the service account can't write files (see step 4 below), and routing large audio through a serverless function would hit Vercel's request-size limits anyway — so uploads bypass the backend entirely. [src/lib/googleUpload.ts](src/lib/googleUpload.ts) asks the signed-in admin's own Google account for a short-lived, upload-only OAuth token (`drive.file` scope — it can only touch files this app creates) and uploads directly browser-to-Drive via the resumable upload protocol.
 - **Playback engine**: [src/context/PlayerContext.tsx](src/context/PlayerContext.tsx) manages the queue, shuffle order, repeat mode, and wires the Media Session API for lock-screen controls.
 
 ## 1. Enable the Drive API
@@ -41,7 +43,16 @@ In Google Drive, open the folder you want the app to serve → **Share** → add
 
 Also grab that folder's ID from its URL: `drive.google.com/drive/folders/THIS_PART`.
 
-## 4. Set up the user store (Upstash Redis)
+## 4. Set up upload access (optional)
+
+Lets admins add songs from the Admin tab instead of through Drive's own UI. Skip this if you're fine uploading manually — everything else in the app works without it.
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → your project → **APIs & Services → Credentials → Create Credentials → OAuth client ID** → type **Web application**.
+2. **Authorized JavaScript origins**: add `http://localhost:5173` for local dev and your deployed URL (e.g. `https://your-app.vercel.app`). No redirect URI needed.
+3. On the **OAuth consent screen**, add your own Google account (and any other admins') as a **test user** — while the app is unverified, only test users can grant it access, which is exactly what you want here.
+4. Copy the **Client ID** — you'll use it as `VITE_GOOGLE_UPLOAD_CLIENT_ID` below.
+
+## 5. Set up the user store (Upstash Redis)
 
 The admin-managed user list needs somewhere persistent to live — Google Drive service accounts on personal (non-Workspace) accounts get zero storage quota, so they can't hold it. Redis is a free, few-click alternative:
 
@@ -49,7 +60,7 @@ The admin-managed user list needs somewhere persistent to live — Google Drive 
 2. Accept the terms, pick the **Free** plan (turn off "Auto Upgrade" if you want a hard guarantee against ever being billed), create it, then connect it to this project (Production + Preview + Development).
 3. From the database's page, reveal and copy `KV_REST_API_URL` and `KV_REST_API_TOKEN` — Vercel already added them to your project's environment variables automatically; you just need them locally too (see next step).
 
-## 5. Configure the app
+## 6. Configure the app
 
 ```bash
 cp .env.example .env.local
@@ -66,11 +77,12 @@ APP_PASSWORD=your-password
 SESSION_SECRET=a-long-random-string
 KV_REST_API_URL=https://your-db.upstash.io
 KV_REST_API_TOKEN=your-upstash-token
+VITE_GOOGLE_UPLOAD_CLIENT_ID=your-client-id.apps.googleusercontent.com
 ```
 
-The private key is the JSON file's `private_key` field pasted as-is (it already contains literal `\n` sequences). Generate `SESSION_SECRET` with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. No `VITE_` prefix on any of these, since they must never reach the browser bundle.
+The private key is the JSON file's `private_key` field pasted as-is (it already contains literal `\n` sequences). Generate `SESSION_SECRET` with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. Only `VITE_GOOGLE_UPLOAD_CLIENT_ID` reaches the browser bundle (that's the point of the `VITE_` prefix) — everything else here is server-only and must never get one.
 
-## 6. Run it
+## 7. Run it
 
 ```bash
 npm install
@@ -79,7 +91,7 @@ npm run dev
 
 Open the printed local URL — you'll land on a login screen; sign in with the `APP_USERNAME`/`APP_PASSWORD` you set above. That account is seeded as the first admin the moment it signs in; from then on, manage everyone else from the **Admin** tab.
 
-## 7. Deploy
+## 8. Deploy
 
 ```bash
 npm run build
@@ -87,9 +99,9 @@ npm run build
 
 On Vercel (or any host that supports Node serverless functions alongside static hosting):
 - Deploy the repo as-is — Vercel auto-detects `api/drive.ts` and `api/auth.ts` as serverless functions.
-- Set `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `APP_USERNAME`, `APP_PASSWORD`, and `SESSION_SECRET` as **environment variables** in your project settings (not as build-time `VITE_` vars — these are read at request time by the serverless functions). `KV_REST_API_URL`/`KV_REST_API_TOKEN` are added automatically when you connect the Redis database in step 4.
+- Set `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `APP_USERNAME`, `APP_PASSWORD`, `SESSION_SECRET`, and `VITE_GOOGLE_UPLOAD_CLIENT_ID` as **environment variables** in your project settings. The first five are read at request time by the serverless functions; `VITE_GOOGLE_UPLOAD_CLIENT_ID` is the one exception that needs to be present at *build* time since it ships to the browser. `KV_REST_API_URL`/`KV_REST_API_TOKEN` are added automatically when you connect the Redis database in step 5.
 
-## 8. Add to iOS home screen
+## 9. Add to iOS home screen
 
 Open the deployed site in **Safari** on iPhone/iPad → Share → **Add to Home Screen**. It launches full-screen, without Safari's browser chrome, using the app icon and name configured in the manifest.
 
@@ -98,3 +110,4 @@ Open the deployed site in **Safari** on iPhone/iPad → Share → **Add to Home 
 - Drive doesn't expose ID3 tags via its API, so track titles come from the filename (extension stripped) rather than embedded artist/album metadata.
 - Access control is username/password only (no email verification, password reset, or 2FA) — fine for sharing with family/friends, not a substitute for real auth if that matters to you. Admins can't be demoted or edited in place, only added/removed, and the last remaining admin can't be removed.
 - Each streamed request is capped at 4MB; large files just take a couple of extra round trips rather than one, which is invisible in normal playback but means very slow connections may see brief pauses between chunks.
+- Uploading requires every admin's Google account to be added as a test user on the OAuth consent screen (step 4) — while the app is unverified, Google blocks anyone not on that list, even other admins. Submitting the app for verification removes that limit if you ever need it.

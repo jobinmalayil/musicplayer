@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { addUser, listUsers, removeUser, type PublicUser, type Role } from '../lib/auth';
 import { PersonIcon, PlusIcon, ShieldIcon, TrashIcon } from './icons';
+import { UploadSongs } from './UploadSongs';
 
 export function Admin() {
   const { username: currentUsername } = useAuth();
@@ -49,6 +50,10 @@ export function Admin() {
   return (
     <div className="library">
       <h1 className="home-greeting">Admin</h1>
+
+      <UploadSongs />
+
+      <h2 className="home-section-title">Manage access</h2>
       <p className="hint-text">Add usernames and passwords for people you want to have access.</p>
 
       <form className="admin-add-form" onSubmit={handleAdd}>

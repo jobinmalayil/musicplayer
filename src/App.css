@@ -797,6 +797,76 @@
 }
 
 /* Admin */
+.admin-upload {
+  margin-bottom: 24px;
+}
+
+.admin-upload-picker {
+  margin-top: 12px;
+  width: fit-content;
+}
+
+.admin-upload-list {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 4px 16px;
+}
+
+.admin-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-upload-row:last-child {
+  border-bottom: none;
+}
+
+.admin-upload-row .item-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-upload-bar {
+  width: 90px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.admin-upload-bar-fill {
+  height: 100%;
+  background: var(--accent-grad);
+  transition: width 0.15s ease;
+}
+
+.admin-upload-status {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-upload-status.done {
+  color: var(--accent-2);
+}
+
+.admin-upload-status.error {
+  color: var(--danger);
+}
+
+.admin-upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
 .admin-add-form {
   display: flex;
   flex-direction: column;
