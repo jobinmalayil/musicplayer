@@ -23,6 +23,85 @@
   padding: 0 16px 24px;
 }
 
+/* Home */
+.home-greeting {
+  font-size: 24px;
+  font-weight: 800;
+  margin: max(12px, env(safe-area-inset-top)) 0 20px;
+}
+
+.home-section {
+  margin-bottom: 28px;
+}
+
+.home-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+
+.hscroll {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.hscroll::-webkit-scrollbar {
+  display: none;
+}
+
+.hscroll-card {
+  flex: 0 0 128px;
+  text-align: left;
+}
+
+.hscroll-card:disabled {
+  opacity: 0.5;
+}
+
+.hscroll-card .item-name {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hscroll-card .track-subtitle {
+  margin-top: 2px;
+}
+
+.track-art-md {
+  width: 128px;
+  height: 128px;
+  border-radius: 12px;
+}
+
+.playlist-card-art {
+  width: 128px;
+  height: 128px;
+  border-radius: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  overflow: hidden;
+}
+
+.playlist-card-art span {
+  display: block;
+}
+
+.playlist-card-art.single {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 /* Playlists */
 .playlist-detail-header {
   display: flex;
@@ -146,6 +225,28 @@
 
 .breadcrumb .sep {
   display: none;
+}
+
+.filter-pills {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.filter-pills button {
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.filter-pills button.active {
+  color: #fff;
+  background: var(--accent-grad);
+  border-color: transparent;
 }
 
 .hint-text,

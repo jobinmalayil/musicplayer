@@ -1,7 +1,7 @@
 import { usePlayer } from '../context/PlayerContext';
-import { DiscIcon, HomeIcon, ListIcon } from './icons';
+import { DiscIcon, HomeIcon, LibraryIcon, ListIcon } from './icons';
 
-export type View = 'library' | 'playlists';
+export type View = 'home' | 'library' | 'playlists';
 
 interface BottomNavProps {
   view: View;
@@ -16,14 +16,20 @@ export function BottomNav({ view, onChangeView }: BottomNavProps) {
     onChangeView(next);
   };
 
+  const tabActive = (tab: View) => !screenOpen && view === tab;
+
   return (
     <nav className="bottom-nav">
-      <button className={`bottom-nav-tab ${!screenOpen && view === 'library' ? 'active' : ''}`} onClick={() => goTo('library')}>
+      <button className={`bottom-nav-tab ${tabActive('home') ? 'active' : ''}`} onClick={() => goTo('home')}>
         <HomeIcon />
+        <span>Home</span>
+      </button>
+      <button className={`bottom-nav-tab ${tabActive('library') ? 'active' : ''}`} onClick={() => goTo('library')}>
+        <LibraryIcon />
         <span>Library</span>
       </button>
       <button
-        className={`bottom-nav-tab ${!screenOpen && view === 'playlists' ? 'active' : ''}`}
+        className={`bottom-nav-tab ${tabActive('playlists') ? 'active' : ''}`}
         onClick={() => goTo('playlists')}
       >
         <ListIcon />

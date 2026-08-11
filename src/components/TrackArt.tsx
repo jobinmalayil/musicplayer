@@ -11,7 +11,7 @@ const NOTE_ICON = (
 interface TrackArtProps {
   trackId: string;
   playing?: boolean;
-  size?: 'sm' | 'lg';
+  size?: 'sm' | 'md' | 'lg';
   coverUrl?: string;
 }
 

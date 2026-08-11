@@ -3,6 +3,8 @@ import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, type DriveIte
 import { usePlayer } from '../context/PlayerContext';
 import { TrackRow } from './TrackRow';
 import { AddToPlaylistSheet } from './AddToPlaylistSheet';
+import { GroupedTracksView } from './GroupedTracksView';
+import { AlbumIcon, PersonIcon } from './icons';
 
 const FOLDER_ICON = (
   <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -10,7 +12,9 @@ const FOLDER_ICON = (
   </svg>
 );
 
-export function Library() {
+type LibraryTab = 'songs' | 'artists' | 'albums';
+
+function SongsTab() {
   const [rootFolderId, setRootFolderId] = useState<string | null>(null);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<DriveItem[]>([]);
@@ -82,7 +86,7 @@ export function Library() {
   const displayedTracks = searchResults ?? tracks;
 
   return (
-    <div className="library">
+    <>
       <div className="search-bar">
         <input
           type="search"
@@ -145,6 +149,45 @@ export function Library() {
       )}
 
       {addingTrack && <AddToPlaylistSheet track={addingTrack} onClose={() => setAddingTrack(null)} />}
+    </>
+  );
+}
+
+export function Library() {
+  const [tab, setTab] = useState<LibraryTab>('songs');
+
+  return (
+    <div className="library">
+      <h1 className="home-greeting">Library</h1>
+      <nav className="filter-pills">
+        <button className={tab === 'songs' ? 'active' : ''} onClick={() => setTab('songs')}>
+          Songs
+        </button>
+        <button className={tab === 'artists' ? 'active' : ''} onClick={() => setTab('artists')}>
+          Artists
+        </button>
+        <button className={tab === 'albums' ? 'active' : ''} onClick={() => setTab('albums')}>
+          Albums
+        </button>
+      </nav>
+
+      {tab === 'songs' && <SongsTab />}
+      {tab === 'artists' && (
+        <GroupedTracksView
+          groupBy="artist"
+          icon={<PersonIcon size={18} />}
+          emptyLabel="No audio files found."
+          unknownLabel="Unknown Artist"
+        />
+      )}
+      {tab === 'albums' && (
+        <GroupedTracksView
+          groupBy="album"
+          icon={<AlbumIcon size={18} />}
+          emptyLabel="No audio files found."
+          unknownLabel="Unknown Album"
+        />
+      )}
     </div>
   );
 }
