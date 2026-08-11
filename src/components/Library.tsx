@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { getBreadcrumb, getRootFolderId, listFolder, searchTracks, type DriveItem, type Track } from '../lib/drive';
+import {
+  getBreadcrumb,
+  getRootFolderId,
+  listFolder,
+  searchTracks,
+  sortTracksByTitle,
+  type DriveItem,
+  type Track,
+} from '../lib/drive';
 import { usePlayer } from '../context/PlayerContext';
 import { TrackRow } from './TrackRow';
 import { AddToPlaylistSheet } from './AddToPlaylistSheet';
@@ -36,7 +44,7 @@ function SongsTab() {
     try {
       const [{ folders, tracks }, crumbs] = await Promise.all([listFolder(id), getBreadcrumb(id)]);
       setFolders(folders);
-      setTracks(tracks);
+      setTracks(sortTracksByTitle(tracks));
       setBreadcrumb(crumbs);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load folder');
@@ -76,7 +84,7 @@ function SongsTab() {
     setSearching(true);
     const handle = setTimeout(() => {
       searchTracks(trimmed)
-        .then(setSearchResults)
+        .then((results) => setSearchResults(sortTracksByTitle(results)))
         .catch((err) => setError(err instanceof Error ? err.message : 'Search failed'))
         .finally(() => setSearching(false));
     }, 350);

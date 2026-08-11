@@ -154,3 +154,22 @@ export function AlbumIcon({ size = 20 }: IconProps) {
     </svg>
   );
 }
+
+export function VolumeIcon({ size = 18, muted = false }: IconProps & { muted?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M4 9v6h4l5 5V4L8 9H4z" />
+      {muted ? (
+        <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+      ) : (
+        <path
+          d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          fill="none"
+        />
+      )}
+    </svg>
+  );
+}

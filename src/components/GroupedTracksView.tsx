@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { usePlayer } from '../context/PlayerContext';
-import { getRootFolderId, listFolder, type Track } from '../lib/drive';
+import { getRootFolderId, listFolder, sortTracksByTitle, type Track } from '../lib/drive';
 import { getTrackMetadata } from '../lib/metadata';
 import { TrackRow } from './TrackRow';
 import { BackIcon } from './icons';
@@ -39,7 +39,7 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
       });
       setGroups(
         Array.from(byName.entries())
-          .map(([name, tracks]) => ({ name, tracks }))
+          .map(([name, tracks]) => ({ name, tracks: sortTracksByTitle(tracks) }))
           .sort((a, b) => a.name.localeCompare(b.name)),
       );
     })().catch(() => setGroups([]));

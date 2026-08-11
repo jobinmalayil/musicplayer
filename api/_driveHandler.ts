@@ -63,25 +63,22 @@ async function getBreadcrumb(folderId: string, rootFolderId: string): Promise<Dr
   return crumbs;
 }
 
-// Not scoped to a specific folder: the service account only ever sees files
-// that have actually been shared with it, so results are implicitly limited
-// to that set regardless of the query.
-async function searchTracks(query: string) {
-  const escaped = query.replace(/'/g, "\\'");
-  const q = `trashed = false and mimeType contains 'audio/' and name contains '${escaped}'`;
-  const items: DriveItem[] = [];
-  let pageToken: string | undefined;
-  do {
-    const data = await driveJson<{ files: DriveItem[]; nextPageToken?: string }>('/files', {
-      q,
-      fields: LIST_FIELDS,
-      pageSize: '100',
-      ...(pageToken ? { pageToken } : {}),
-    });
-    items.push(...data.files);
-    pageToken = data.nextPageToken;
-  } while (pageToken);
-  return items;
+// A service account's unscoped files.list (no parent filter) doesn't
+// reliably surface content that's merely shared with it (as opposed to
+// owned) — confirmed empirically: it returns zero results even for
+// substrings known to match. Parent-scoped queries work fine, so search is
+// built as a recursive walk from the known root folder instead of relying
+// on Drive's global search for an account that owns nothing.
+async function getAllTracks(folderId: string): Promise<DriveItem[]> {
+  const { folders, tracks } = await listFolder(folderId);
+  const nested = await Promise.all(folders.map((f) => getAllTracks(f.id)));
+  return [...tracks, ...nested.flat()];
+}
+
+async function searchTracks(query: string, rootFolderId: string): Promise<DriveItem[]> {
+  const needle = query.toLowerCase();
+  const all = await getAllTracks(rootFolderId);
+  return all.filter((t) => t.name.toLowerCase().includes(needle));
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown) {
@@ -154,7 +151,7 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
     }
     if (action === 'search') {
       const query = url.searchParams.get('q') ?? '';
-      sendJson(res, 200, await searchTracks(query));
+      sendJson(res, 200, await searchTracks(query, ROOT_FOLDER_ID));
       return;
     }
     if (action === 'stream') {

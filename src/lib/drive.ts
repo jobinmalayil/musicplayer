@@ -15,6 +15,16 @@ export function trackTitle(track: Track): string {
   return track.name.replace(/\.[a-z0-9]+$/i, '');
 }
 
+/**
+ * Alphabetical by display title. The folder listing already comes back
+ * pre-sorted from Drive's own `orderBy`, but search results don't — sorting
+ * client-side keeps ordering consistent everywhere regardless of what the
+ * API happens to return.
+ */
+export function sortTracksByTitle(tracks: Track[]): Track[] {
+  return [...tracks].sort((a, b) => trackTitle(a).localeCompare(trackTitle(b), undefined, { numeric: true }));
+}
+
 async function apiFetch<T>(action: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL('/api/drive', window.location.origin);
   url.searchParams.set('action', action);

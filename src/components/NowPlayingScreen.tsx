@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { trackTitle } from '../lib/drive';
@@ -6,7 +6,16 @@ import { formatTime } from '../lib/formatTime';
 import { TrackArt } from './TrackArt';
 import { TrackRow } from './TrackRow';
 import { WaveformProgress } from './WaveformProgress';
-import { ChevronDownIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, RepeatIcon, ShuffleIcon } from './icons';
+import {
+  ChevronDownIcon,
+  NextIcon,
+  PauseIcon,
+  PlayIcon,
+  PrevIcon,
+  RepeatIcon,
+  ShuffleIcon,
+  VolumeIcon,
+} from './icons';
 
 export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
   const {
@@ -15,10 +24,12 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
     isPlaying,
     currentTime,
     duration,
+    volume,
     togglePlay,
     playNext,
     playPrevious,
     seek,
+    setVolume,
     shuffle,
     repeat,
     toggleShuffle,
@@ -28,6 +39,16 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
 
   const [tab, setTab] = useState<'playing' | 'queue'>('playing');
   const meta = useTrackMetadata(currentTrack);
+  const lastVolumeRef = useRef(volume || 1);
+
+  const toggleMute = () => {
+    if (volume > 0) {
+      lastVolumeRef.current = volume;
+      setVolume(0);
+    } else {
+      setVolume(lastVolumeRef.current || 1);
+    }
+  };
 
   if (!currentTrack) return null;
 
@@ -86,6 +107,21 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
             >
               <RepeatIcon mode={repeat} />
             </button>
+          </div>
+
+          <div className="np-volume-row">
+            <button className="icon-btn" onClick={toggleMute} aria-label={volume > 0 ? 'Mute' : 'Unmute'}>
+              <VolumeIcon size={18} muted={volume === 0} />
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={(e) => setVolume(Number(e.target.value))}
+              aria-label="Volume"
+            />
           </div>
         </div>
       ) : (
