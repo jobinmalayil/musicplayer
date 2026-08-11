@@ -8,6 +8,7 @@ import { getRootFolderId, listFolder, trackTitle, type Track } from '../lib/driv
 import { TrackArt } from './TrackArt';
 import { TrackRow } from './TrackRow';
 import { PlaylistArt } from './PlaylistArt';
+import { LogoutIcon } from './icons';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -57,8 +58,8 @@ export function Home() {
     <div className="library">
       <div className="home-header-row">
         <h1 className="home-greeting">{greeting()}</h1>
-        <button className="btn-link" onClick={disconnect}>
-          Sign out
+        <button className="icon-btn sign-out-btn" onClick={disconnect} aria-label="Sign out">
+          <LogoutIcon size={20} />
         </button>
       </div>
 

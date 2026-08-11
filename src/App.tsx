@@ -7,6 +7,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { Home } from './components/Home';
 import { Library } from './components/Library';
 import { Playlists } from './components/Playlists';
+import { Admin } from './components/Admin';
 import { NowPlayingBar } from './components/NowPlayingBar';
 import { RecentlyPlayedTracker } from './components/RecentlyPlayedTracker';
 import { BottomNav, type View } from './components/BottomNav';
@@ -16,12 +17,14 @@ const VIEWS: Record<View, () => React.JSX.Element> = {
   home: Home,
   library: Library,
   playlists: Playlists,
+  admin: Admin,
 };
 
 function AppShell() {
-  const { checking, signedIn } = useAuth();
+  const { checking, signedIn, isAdmin } = useAuth();
   const [view, setView] = useState<View>('home');
-  const ActiveView = VIEWS[view];
+  const activeView = view === 'admin' && !isAdmin ? 'home' : view;
+  const ActiveView = VIEWS[activeView];
 
   if (checking) return null;
   if (!signedIn) return <LoginScreen />;

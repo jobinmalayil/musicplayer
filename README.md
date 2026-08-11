@@ -8,13 +8,13 @@ A music player that streams your library straight from Google Drive. React + Vit
 - Full player: play/pause, next/previous, seek, shuffle, repeat (off / all / one)
 - Lock-screen / notification media controls via the Media Session API
 - Installable PWA — "Add to Home Screen" on iOS gives it a standalone, full-screen app experience
-- Gated behind a single shared username/password — a serverless proxy handles Google auth server-side, so visitors never see a Google sign-in prompt, just your own login screen
+- Gated behind username/password accounts you manage yourself from an in-app Admin tab — a serverless proxy handles Google auth server-side, so visitors never see a Google sign-in prompt, just your own login screen
 
 ## How it works
 
 Google's Drive API doesn't support truly anonymous access, even to files shared "Anyone with the link" — that sharing mode only works for people opening the link in Drive's own web app. So instead, a tiny serverless function ([api/drive.ts](api/drive.ts)) authenticates to Google as a **service account** (a credential you control, kept server-side only) and proxies list/search/breadcrumb/stream requests.
 
-- **Access control**: [api/auth.ts](api/auth.ts) checks a username/password you configure against a signed, `HttpOnly` session cookie ([api/_session.ts](api/_session.ts)). The Drive proxy rejects any request without a valid cookie, so the library and audio are never reachable without logging in first.
+- **Access control**: [api/auth.ts](api/auth.ts) checks credentials against a user list stored in Redis ([api/_usersStore.ts](api/_usersStore.ts), passwords hashed with scrypt) and issues a signed, `HttpOnly` session cookie ([api/_session.ts](api/_session.ts)) carrying the username and role. The Drive proxy rejects any request without a valid cookie. The first admin is seeded from `APP_USERNAME`/`APP_PASSWORD` the first time the app runs; after that, admins add/remove users from the **Admin** tab in the app itself (only visible to admin accounts) — no redeploy needed.
 - **Browsing**: the proxy calls Drive's `files.list`/`files.get` using the service account's token.
 - **Streaming**: [api/_driveHandler.ts](api/_driveHandler.ts) forwards the browser's `Range` header to Drive and streams the response back (capped per-request to stay under serverless response-size limits — the player just requests more as needed, so seeking still works normally).
 - **Local dev**: [vite.config.ts](vite.config.ts) mounts the exact same handlers as Vite dev-server middleware, so `npm run dev` behaves identically to the deployed version — no need for the Vercel CLI locally.
@@ -41,7 +41,15 @@ In Google Drive, open the folder you want the app to serve → **Share** → add
 
 Also grab that folder's ID from its URL: `drive.google.com/drive/folders/THIS_PART`.
 
-## 4. Configure the app
+## 4. Set up the user store (Upstash Redis)
+
+The admin-managed user list needs somewhere persistent to live — Google Drive service accounts on personal (non-Workspace) accounts get zero storage quota, so they can't hold it. Redis is a free, few-click alternative:
+
+1. In your Vercel project → **Storage** tab → **Create Database** → **Marketplace Database Providers** → **Upstash** → **Upstash for Redis**.
+2. Accept the terms, pick the **Free** plan (turn off "Auto Upgrade" if you want a hard guarantee against ever being billed), create it, then connect it to this project (Production + Preview + Development).
+3. From the database's page, reveal and copy `KV_REST_API_URL` and `KV_REST_API_TOKEN` — Vercel already added them to your project's environment variables automatically; you just need them locally too (see next step).
+
+## 5. Configure the app
 
 ```bash
 cp .env.example .env.local
@@ -56,20 +64,22 @@ GOOGLE_DRIVE_ROOT_FOLDER_ID=your-folder-id
 APP_USERNAME=your-username
 APP_PASSWORD=your-password
 SESSION_SECRET=a-long-random-string
+KV_REST_API_URL=https://your-db.upstash.io
+KV_REST_API_TOKEN=your-upstash-token
 ```
 
 The private key is the JSON file's `private_key` field pasted as-is (it already contains literal `\n` sequences). Generate `SESSION_SECRET` with `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`. No `VITE_` prefix on any of these, since they must never reach the browser bundle.
 
-## 5. Run it
+## 6. Run it
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open the printed local URL — you'll land on a login screen; sign in with the `APP_USERNAME`/`APP_PASSWORD` you set above.
+Open the printed local URL — you'll land on a login screen; sign in with the `APP_USERNAME`/`APP_PASSWORD` you set above. That account is seeded as the first admin the moment it signs in; from then on, manage everyone else from the **Admin** tab.
 
-## 6. Deploy
+## 7. Deploy
 
 ```bash
 npm run build
@@ -77,14 +87,14 @@ npm run build
 
 On Vercel (or any host that supports Node serverless functions alongside static hosting):
 - Deploy the repo as-is — Vercel auto-detects `api/drive.ts` and `api/auth.ts` as serverless functions.
-- Set `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `APP_USERNAME`, `APP_PASSWORD`, and `SESSION_SECRET` as **environment variables** in your project settings (not as build-time `VITE_` vars — these are read at request time by the serverless functions).
+- Set `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`, `GOOGLE_DRIVE_ROOT_FOLDER_ID`, `APP_USERNAME`, `APP_PASSWORD`, and `SESSION_SECRET` as **environment variables** in your project settings (not as build-time `VITE_` vars — these are read at request time by the serverless functions). `KV_REST_API_URL`/`KV_REST_API_TOKEN` are added automatically when you connect the Redis database in step 4.
 
-## 7. Add to iOS home screen
+## 8. Add to iOS home screen
 
 Open the deployed site in **Safari** on iPhone/iPad → Share → **Add to Home Screen**. It launches full-screen, without Safari's browser chrome, using the app icon and name configured in the manifest.
 
 ## Limitations
 
 - Drive doesn't expose ID3 tags via its API, so track titles come from the filename (extension stripped) rather than embedded artist/album metadata.
-- Access control is a single shared username/password, not per-user accounts — fine for sharing with family/friends, not a substitute for real auth if that matters to you.
+- Access control is username/password only (no email verification, password reset, or 2FA) — fine for sharing with family/friends, not a substitute for real auth if that matters to you. Admins can't be demoted or edited in place, only added/removed, and the last remaining admin can't be removed.
 - Each streamed request is capped at 4MB; large files just take a couple of extra round trips rather than one, which is invisible in normal playback but means very slow connections may see brief pauses between chunks.

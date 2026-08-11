@@ -1,7 +1,8 @@
+import { useAuth } from '../context/AuthContext';
 import { usePlayer } from '../context/PlayerContext';
-import { DiscIcon, HomeIcon, LibraryIcon, ListIcon } from './icons';
+import { DiscIcon, HomeIcon, LibraryIcon, ListIcon, ShieldIcon } from './icons';
 
-export type View = 'home' | 'library' | 'playlists';
+export type View = 'home' | 'library' | 'playlists' | 'admin';
 
 interface BottomNavProps {
   view: View;
@@ -9,6 +10,7 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ view, onChangeView }: BottomNavProps) {
+  const { isAdmin } = useAuth();
   const { currentTrack, screenOpen, openScreen, closeScreen } = usePlayer();
 
   const goTo = (next: View) => {
@@ -43,6 +45,12 @@ export function BottomNav({ view, onChangeView }: BottomNavProps) {
         <DiscIcon />
         <span>Now Playing</span>
       </button>
+      {isAdmin && (
+        <button className={`bottom-nav-tab ${tabActive('admin') ? 'active' : ''}`} onClick={() => goTo('admin')}>
+          <ShieldIcon />
+          <span>Admin</span>
+        </button>
+      )}
     </nav>
   );
 }

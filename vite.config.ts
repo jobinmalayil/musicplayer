@@ -15,6 +15,8 @@ function driveApiDevMiddleware(env: Record<string, string>): Plugin {
         'APP_USERNAME',
         'APP_PASSWORD',
         'SESSION_SECRET',
+        'KV_REST_API_URL',
+        'KV_REST_API_TOKEN',
       ]) {
         if (env[key]) process.env[key] = env[key]
       }
