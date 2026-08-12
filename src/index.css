@@ -4,8 +4,8 @@
   --surface: rgba(255, 255, 255, 0.09);
   --surface-2: rgba(255, 255, 255, 0.14);
   --border: rgba(255, 255, 255, 0.14);
-  --text: #f5f3ff;
-  --text-dim: #c3b3ea;
+  --text: #f8f8fc;
+  --text-dim: rgba(255, 255, 255, 0.72);
   --accent-1: #a855f7;
   --accent-2: #ec4899;
   --accent-grad: linear-gradient(135deg, var(--accent-1), var(--accent-2));

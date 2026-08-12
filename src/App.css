@@ -17,10 +17,10 @@
   gap: 12px;
   padding: 28px 24px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(10, 8, 18, 0.4);
   backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5);
 }
 
@@ -405,7 +405,7 @@
   display: flex;
   justify-content: space-around;
   margin: 0 8px max(8px, env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(10, 8, 18, 0.45);
   backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -455,7 +455,7 @@
 
 .breadcrumb button {
   color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(10, 8, 18, 0.35);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -482,7 +482,7 @@
 
 .filter-pills button {
   color: var(--text-dim);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(10, 8, 18, 0.35);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -695,7 +695,7 @@
   position: sticky;
   bottom: 0;
   margin: 0 8px 8px;
-  background: rgba(255, 255, 255, 0.11);
+  background: rgba(10, 8, 18, 0.5);
   backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -962,7 +962,7 @@
 }
 
 .home-header-actions .icon-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(10, 8, 18, 0.4);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -1023,7 +1023,7 @@
 
 .admin-upload-list {
   margin-top: 14px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(10, 8, 18, 0.35);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -1088,7 +1088,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(10, 8, 18, 0.35);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid rgba(255, 255, 255, 0.15);
