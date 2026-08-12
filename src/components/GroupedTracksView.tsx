@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useMetadataOverrides } from '../context/MetadataOverridesContext';
 import { usePlayer } from '../context/PlayerContext';
+import { getArtistPhoto } from '../lib/artistPhotos';
 import { getRootFolderId, listFolder, sortTracksByTitle, type Track } from '../lib/drive';
 import { getTrackMetadata } from '../lib/metadata';
 import { TrackRow } from './TrackRow';
@@ -53,15 +54,34 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
   }, [groupBy, unknownLabel, getOverride]);
 
   if (selected) {
+    const photo = groupBy === 'artist' ? getArtistPhoto(selected.name) : undefined;
     return (
       <div>
-        <div className="playlist-detail-header">
-          <button className="icon-btn" onClick={() => setSelected(null)} aria-label="Back">
-            <BackIcon />
-          </button>
-          <h2>{selected.name}</h2>
-          <span aria-hidden="true" />
-        </div>
+        {photo ? (
+          <div className="artist-hero">
+            <button className="icon-btn artist-hero-back" onClick={() => setSelected(null)} aria-label="Back">
+              <BackIcon />
+            </button>
+            <div className="artist-hero-banner">
+              <img src={photo} alt={selected.name} className="artist-hero-photo" />
+              <div className="artist-hero-fade" aria-hidden="true" />
+              <div className="artist-hero-text">
+                <h2 className="artist-hero-name">{selected.name}</h2>
+                <p className="artist-hero-count">
+                  {selected.tracks.length} song{selected.tracks.length === 1 ? '' : 's'}
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="playlist-detail-header">
+            <button className="icon-btn" onClick={() => setSelected(null)} aria-label="Back">
+              <BackIcon />
+            </button>
+            <h2>{selected.name}</h2>
+            <span aria-hidden="true" />
+          </div>
+        )}
         <ul className="item-list track-list">
           {selected.tracks.map((track, i) => (
             <li key={track.id}>
