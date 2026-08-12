@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { usePlayCounts } from '../context/PlayCountsContext';
 import { usePlayer } from '../context/PlayerContext';
 import { usePlaylists } from '../context/PlaylistsContext';
 import { useRecentlyPlayed } from '../context/RecentlyPlayedContext';
@@ -17,13 +18,13 @@ function greeting(): string {
   return 'Good evening';
 }
 
-function RecentCard({ track, onClick }: { track: Track; onClick: () => void }) {
+function TrackCard({ track, subtitle, onClick }: { track: Track; subtitle?: string; onClick: () => void }) {
   const meta = useTrackMetadata(track);
   return (
     <button className="hscroll-card" onClick={onClick}>
       <TrackArt trackId={track.id} size="md" coverUrl={meta.coverUrl} />
       <span className="item-name">{meta.title || trackTitle(track)}</span>
-      {meta.artist && <span className="track-subtitle">{meta.artist}</span>}
+      <span className="track-subtitle">{subtitle ?? meta.artist ?? ''}</span>
     </button>
   );
 }
@@ -33,6 +34,7 @@ export function Home() {
   const { playQueue, currentTrack, isPlaying } = usePlayer();
   const { playlists } = usePlaylists();
   const { recentlyPlayed } = useRecentlyPlayed();
+  const { getCount } = usePlayCounts();
 
   const [libraryTracks, setLibraryTracks] = useState<Track[]>([]);
 
@@ -48,6 +50,21 @@ export function Home() {
       cancelled = true;
     };
   }, []);
+
+  const recentlyAdded = useMemo(() => {
+    return [...libraryTracks]
+      .filter((t) => t.modifiedTime)
+      .sort((a, b) => new Date(b.modifiedTime!).getTime() - new Date(a.modifiedTime!).getTime())
+      .slice(0, 10);
+  }, [libraryTracks]);
+
+  const mostPlayed = useMemo(() => {
+    return libraryTracks
+      .map((track) => ({ track, count: getCount(track.id) }))
+      .filter((entry) => entry.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [libraryTracks, getCount]);
 
   const recommended = useMemo(() => {
     const recentIds = new Set(recentlyPlayed.map((t) => t.id));
@@ -68,7 +85,34 @@ export function Home() {
           <h2 className="home-section-title">Recently played</h2>
           <div className="hscroll">
             {recentlyPlayed.slice(0, 10).map((track, i) => (
-              <RecentCard key={track.id} track={track} onClick={() => playQueue(recentlyPlayed, i)} />
+              <TrackCard key={track.id} track={track} onClick={() => playQueue(recentlyPlayed, i)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recentlyAdded.length > 0 && (
+        <section className="home-section">
+          <h2 className="home-section-title">Recently added</h2>
+          <div className="hscroll">
+            {recentlyAdded.map((track, i) => (
+              <TrackCard key={track.id} track={track} onClick={() => playQueue(recentlyAdded, i)} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {mostPlayed.length > 0 && (
+        <section className="home-section">
+          <h2 className="home-section-title">Most played</h2>
+          <div className="hscroll">
+            {mostPlayed.map(({ track, count }, i) => (
+              <TrackCard
+                key={track.id}
+                track={track}
+                subtitle={`${count} play${count === 1 ? '' : 's'}`}
+                onClick={() => playQueue(mostPlayed.map((entry) => entry.track), i)}
+              />
             ))}
           </div>
         </section>

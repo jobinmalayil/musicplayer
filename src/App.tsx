@@ -4,6 +4,7 @@ import { PlayerProvider } from './context/PlayerContext';
 import { PlaylistsProvider } from './context/PlaylistsContext';
 import { RecentlyPlayedProvider } from './context/RecentlyPlayedContext';
 import { PlayCountsProvider } from './context/PlayCountsContext';
+import { MetadataOverridesProvider } from './context/MetadataOverridesContext';
 import { setActiveShareToken } from './lib/drive';
 import { LoginScreen } from './components/LoginScreen';
 import { Home } from './components/Home';
@@ -54,16 +55,18 @@ function AppShell() {
       <PlaylistsProvider>
         <RecentlyPlayedProvider>
           <PlayCountsProvider>
-            <RecentlyPlayedTracker />
-            <PlayCountTracker />
-            <SharedTrackHandler />
-            <div className="app-shell">
-              <PullToRefresh>
-                <ActiveView />
-              </PullToRefresh>
-              <NowPlayingBar />
-              <BottomNav view={view} onChangeView={setView} />
-            </div>
+            <MetadataOverridesProvider>
+              <RecentlyPlayedTracker />
+              <PlayCountTracker />
+              <SharedTrackHandler />
+              <div className="app-shell">
+                <PullToRefresh>
+                  <ActiveView />
+                </PullToRefresh>
+                <NowPlayingBar />
+                <BottomNav view={view} onChangeView={setView} />
+              </div>
+            </MetadataOverridesProvider>
           </PlayCountsProvider>
         </RecentlyPlayedProvider>
       </PlaylistsProvider>

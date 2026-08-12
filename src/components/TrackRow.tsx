@@ -5,8 +5,20 @@ import { useTrackMetadata } from '../hooks/useTrackMetadata';
 import { hideTrack, trackTitle, unhideTrack, type Track } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { shareTrack } from '../lib/share';
+import { EditMetadataSheet } from './EditMetadataSheet';
 import { TrackArt } from './TrackArt';
-import { CheckIcon, EyeIcon, EyeOffIcon, HeadphonesIcon, PauseIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from './icons';
+import {
+  CheckIcon,
+  EditIcon,
+  EyeIcon,
+  EyeOffIcon,
+  HeadphonesIcon,
+  PauseIcon,
+  PlayIcon,
+  PlusIcon,
+  ShareIcon,
+  TrashIcon,
+} from './icons';
 
 interface TrackRowProps {
   track: Track;
@@ -35,6 +47,7 @@ export function TrackRow({
   const { isAdmin } = useAuth();
   const [hidden, setHidden] = useState(track.hidden ?? false);
   const [togglingHidden, setTogglingHidden] = useState(false);
+  const [editingMeta, setEditingMeta] = useState(false);
 
   const handleShare = async () => {
     const result = await shareTrack(track);
@@ -88,6 +101,15 @@ export function TrackRow({
       {isAdmin && (
         <button
           className="icon-btn track-side-action"
+          onClick={() => setEditingMeta(true)}
+          aria-label={`Edit ${title}`}
+        >
+          <EditIcon size={18} />
+        </button>
+      )}
+      {isAdmin && (
+        <button
+          className="icon-btn track-side-action"
           onClick={handleToggleHidden}
           disabled={togglingHidden}
           aria-label={hidden ? `Unhide ${title}` : `Hide ${title}`}
@@ -95,6 +117,7 @@ export function TrackRow({
           {hidden ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
         </button>
       )}
+      {editingMeta && <EditMetadataSheet track={track} meta={meta} onClose={() => setEditingMeta(false)} />}
       {onAddToPlaylist && (
         <button className="icon-btn track-side-action" onClick={() => onAddToPlaylist(track)} aria-label="Add to playlist">
           <PlusIcon size={18} />

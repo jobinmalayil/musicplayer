@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useMetadataOverrides } from '../context/MetadataOverridesContext';
 import { usePlayer } from '../context/PlayerContext';
 import { getRootFolderId, listFolder, sortTracksByTitle, type Track } from '../lib/drive';
 import { getTrackMetadata } from '../lib/metadata';
@@ -21,6 +22,7 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
   const { playQueue, currentTrack, isPlaying } = usePlayer();
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [selected, setSelected] = useState<Group | null>(null);
+  const { getOverride } = useMetadataOverrides();
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +35,9 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
 
       const byName = new Map<string, Track[]>();
       tracks.forEach((track, i) => {
-        const name = (groupBy === 'artist' ? metas[i].artist : metas[i].album) || unknownLabel;
+        const override = getOverride(track.id);
+        const value = groupBy === 'artist' ? override?.artist || metas[i].artist : override?.album || metas[i].album;
+        const name = value || unknownLabel;
         if (!byName.has(name)) byName.set(name, []);
         byName.get(name)!.push(track);
       });
@@ -46,7 +50,7 @@ export function GroupedTracksView({ groupBy, icon, emptyLabel, unknownLabel }: G
     return () => {
       cancelled = true;
     };
-  }, [groupBy, unknownLabel]);
+  }, [groupBy, unknownLabel, getOverride]);
 
   if (selected) {
     return (

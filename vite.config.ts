@@ -28,6 +28,10 @@ function driveApiDevMiddleware(env: Record<string, string>): Plugin {
         const { handleAuthRequest } = await import('./api/_authHandler.ts')
         await handleAuthRequest(req, res)
       })
+      server.middlewares.use('/api/userdata', async (req, res) => {
+        const { handleUserDataRequest } = await import('./api/_userDataHandler.ts')
+        await handleUserDataRequest(req, res)
+      })
     },
   }
 }

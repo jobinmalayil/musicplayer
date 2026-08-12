@@ -5,7 +5,7 @@ import { TrackRow } from './TrackRow';
 import { BackIcon, ListIcon, PlusIcon, TrashIcon } from './icons';
 
 export function Playlists() {
-  const { playlists, createPlaylist, deletePlaylist, removeTrack } = usePlaylists();
+  const { playlists, loading, createPlaylist, deletePlaylist, removeTrack } = usePlaylists();
   const { playQueue, currentTrack, isPlaying } = usePlayer();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -65,7 +65,9 @@ export function Playlists() {
           <PlusIcon />
         </button>
       </div>
-      {playlists.length === 0 ? (
+      {loading ? (
+        <p className="hint-text">Loading…</p>
+      ) : playlists.length === 0 ? (
         <p className="hint-text">No playlists yet — tap + to create one.</p>
       ) : (
         <ul className="item-list">

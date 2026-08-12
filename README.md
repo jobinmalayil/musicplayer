@@ -9,7 +9,9 @@ A music player that streams your library straight from Google Drive. React + Vit
 - Lock-screen / notification media controls via the Media Session API
 - Installable PWA — "Add to Home Screen" on iOS gives it a standalone, full-screen app experience
 - Gated behind username/password accounts you manage yourself from an in-app Admin tab — a serverless proxy handles Google auth server-side, so visitors never see a Google sign-in prompt, just your own login screen
-- Admins can hide individual tracks (invisible and unplayable for everyone else) and upload new songs straight into the shared Drive folder from the Admin tab
+- Admins can hide individual tracks (invisible and unplayable for everyone else), upload new songs straight into the shared Drive folder, and fix up messy filenames with title/artist/album overrides — all from the Admin tab
+- Playlists and "recently played" sync per-account across every device you sign into, not just the one you made them on
+- Home surfaces "Recently added" and "Most played" alongside "Recently played" and your playlists
 
 ## How it works
 
@@ -20,6 +22,7 @@ Google's Drive API doesn't support truly anonymous access, even to files shared 
 - **Streaming**: [api/_driveHandler.ts](api/_driveHandler.ts) forwards the browser's `Range` header to Drive and streams the response back (capped per-request to stay under serverless response-size limits — the player just requests more as needed, so seeking still works normally).
 - **Local dev**: [vite.config.ts](vite.config.ts) mounts the exact same handlers as Vite dev-server middleware, so `npm run dev` behaves identically to the deployed version — no need for the Vercel CLI locally.
 - **Uploading**: the service account can't write files (see step 4 below), and routing large audio through a serverless function would hit Vercel's request-size limits anyway — so uploads bypass the backend entirely. [src/lib/googleUpload.ts](src/lib/googleUpload.ts) asks the signed-in admin's own Google account for a short-lived, upload-only OAuth token (`drive.file` scope — it can only touch files this app creates) and uploads directly browser-to-Drive via the resumable upload protocol.
+- **Per-account data**: playlists, recently-played, and admin metadata overrides all live in Redis too ([api/_userLibraryStore.ts](api/_userLibraryStore.ts), [api/_metadataOverrides.ts](api/_metadataOverrides.ts)) — playlists/recently-played are keyed by username so each account's library follows them across devices, while metadata overrides are global (Drive filenames are the only "true" source, so an admin's correction should apply for everyone).
 - **Playback engine**: [src/context/PlayerContext.tsx](src/context/PlayerContext.tsx) manages the queue, shuffle order, repeat mode, and wires the Media Session API for lock-screen controls.
 
 ## 1. Enable the Drive API

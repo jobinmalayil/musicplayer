@@ -271,6 +271,13 @@
   flex: 1;
 }
 
+.edit-metadata-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 4px 0 14px;
+}
+
 /* Bottom tab bar */
 .bottom-nav {
   display: flex;

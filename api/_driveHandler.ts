@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { getServiceAccountToken } from './_driveAuth.js';
 import { getHiddenTrackIds, hideTrack, isTrackHidden, unhideTrack } from './_hiddenTracks.js';
+import { readBody, sendJson } from './_http.js';
+import { clearOverride, getAllOverrides, setOverride } from './_metadataOverrides.js';
 import { getPlayCounts, incrementPlayCount } from './_playCounts.js';
 import { createShareToken, getSession, verifyShareToken } from './_session.js';
 
@@ -106,11 +108,6 @@ async function searchTracks(
   const all = await getAllTracks(rootFolderId);
   const matched = all.filter((t) => t.name.toLowerCase().includes(needle));
   return applyHiddenFilter(matched, hiddenIds, isAdmin);
-}
-
-function sendJson(res: ServerResponse, status: number, body: unknown) {
-  res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(body));
 }
 
 function clampRange(rangeHeader: string | undefined): { start: number; end: number } {
@@ -281,6 +278,41 @@ export async function handleDriveRequest(req: IncomingMessage, res: ServerRespon
       }
       await unhideTrack(id);
       sendJson(res, 200, { hidden: false });
+      return;
+    }
+    if (action === 'metadata-overrides') {
+      sendJson(res, 200, await getAllOverrides());
+      return;
+    }
+    if (action === 'set-metadata') {
+      if (!isAdmin) {
+        sendJson(res, 403, { error: 'Admin access required' });
+        return;
+      }
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      const body = JSON.parse(await readBody(req)) as { title?: string; artist?: string; album?: string };
+      await setOverride(id, {
+        title: body.title?.trim() || undefined,
+        artist: body.artist?.trim() || undefined,
+        album: body.album?.trim() || undefined,
+      });
+      sendJson(res, 200, { ok: true });
+      return;
+    }
+    if (action === 'clear-metadata') {
+      if (!isAdmin) {
+        sendJson(res, 403, { error: 'Admin access required' });
+        return;
+      }
+      if (!id) {
+        sendJson(res, 400, { error: 'Missing id' });
+        return;
+      }
+      await clearOverride(id);
+      sendJson(res, 200, { ok: true });
       return;
     }
     sendJson(res, 400, { error: `Unknown action: ${action}` });

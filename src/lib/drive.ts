@@ -36,12 +36,12 @@ export function setActiveShareToken(token: string | null) {
   activeShareToken = token;
 }
 
-async function apiFetch<T>(action: string, params: Record<string, string> = {}): Promise<T> {
+async function apiFetch<T>(action: string, params: Record<string, string> = {}, init?: RequestInit): Promise<T> {
   const url = new URL('/api/drive', window.location.origin);
   url.searchParams.set('action', action);
   for (const [key, value] of Object.entries(params)) url.searchParams.set(key, value);
   if (activeShareToken) url.searchParams.set('t', activeShareToken);
-  const res = await fetch(url);
+  const res = await fetch(url, init);
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`Drive proxy ${action} failed: ${res.status} ${body}`);
@@ -104,4 +104,29 @@ export function hideTrack(id: string): Promise<{ hidden: true }> {
 /** Admin-only: undoes hideTrack. */
 export function unhideTrack(id: string): Promise<{ hidden: false }> {
   return apiFetch('unhide-track', { id });
+}
+
+export interface MetadataOverride {
+  title?: string;
+  artist?: string;
+  album?: string;
+}
+
+/** Admin-set title/artist/album corrections, keyed by track id. Visible to everyone; editable only by admins. */
+export function getMetadataOverrides(): Promise<Record<string, MetadataOverride>> {
+  return apiFetch('metadata-overrides');
+}
+
+/** Admin-only: sets (or replaces) the metadata override for a track. */
+export function setMetadataOverride(id: string, override: MetadataOverride): Promise<{ ok: true }> {
+  return apiFetch(
+    'set-metadata',
+    { id },
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(override) },
+  );
+}
+
+/** Admin-only: reverts a track back to its file's own metadata. */
+export function clearMetadataOverride(id: string): Promise<{ ok: true }> {
+  return apiFetch('clear-metadata', { id });
 }

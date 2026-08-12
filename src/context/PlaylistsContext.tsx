@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { getServerPlaylists, saveServerPlaylists } from '../lib/userData';
 import type { Track } from '../lib/drive';
 
 export interface Playlist {
@@ -10,6 +11,7 @@ export interface Playlist {
 
 interface PlaylistsContextValue {
   playlists: Playlist[];
+  loading: boolean;
   createPlaylist: (name: string) => Playlist;
   deletePlaylist: (id: string) => void;
   renamePlaylist: (id: string, name: string) => void;
@@ -17,21 +19,18 @@ interface PlaylistsContextValue {
   removeTrack: (playlistId: string, trackId: string) => void;
 }
 
-const STORAGE_KEY = 'drive-music.playlists';
-
-function readStoredPlaylists(): Playlist[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Playlist[]) : [];
-  } catch {
-    return [];
-  }
-}
-
 const PlaylistsContext = createContext<PlaylistsContextValue | null>(null);
 
 export function PlaylistsProvider({ children }: { children: ReactNode }) {
-  const [playlists, setPlaylists] = useState<Playlist[]>(readStoredPlaylists);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getServerPlaylists()
+      .then(({ playlists }) => setPlaylists(playlists))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   // Every mutation goes through the functional setState form so chained
   // calls in the same handler (e.g. createPlaylist then addTrack) always
@@ -39,7 +38,7 @@ export function PlaylistsProvider({ children }: { children: ReactNode }) {
   const persist = useCallback((updater: (prev: Playlist[]) => Playlist[]) => {
     setPlaylists((prev) => {
       const next = updater(prev);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      void saveServerPlaylists(next).catch(() => {});
       return next;
     });
   }, []);
@@ -90,8 +89,8 @@ export function PlaylistsProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ playlists, createPlaylist, deletePlaylist, renamePlaylist, addTrack, removeTrack }),
-    [playlists, createPlaylist, deletePlaylist, renamePlaylist, addTrack, removeTrack],
+    () => ({ playlists, loading, createPlaylist, deletePlaylist, renamePlaylist, addTrack, removeTrack }),
+    [playlists, loading, createPlaylist, deletePlaylist, renamePlaylist, addTrack, removeTrack],
   );
 
   return <PlaylistsContext.Provider value={value}>{children}</PlaylistsContext.Provider>;
