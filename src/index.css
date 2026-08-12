@@ -53,6 +53,27 @@
   --body-gradient: linear-gradient(160deg, #27272a 0%, #3f3f46 45%, #52525b 100%);
 }
 
+:root[data-skin='terracotta'] {
+  --bg: #2b1810;
+  --accent-1: #f2a65a;
+  --accent-2: #c2542c;
+  --body-gradient: linear-gradient(160deg, #3d2417 0%, #8a4a2c 45%, #d98c4a 100%);
+}
+
+:root[data-skin='jade'] {
+  --bg: #0d211c;
+  --accent-1: #e8c987;
+  --accent-2: #2f7a63;
+  --body-gradient: linear-gradient(160deg, #12312a 0%, #2f6b56 45%, #5fae8f 100%);
+}
+
+:root[data-skin='slate'] {
+  --bg: #171d24;
+  --accent-1: #d7b98a;
+  --accent-2: #3e5468;
+  --body-gradient: linear-gradient(160deg, #1c242c 0%, #3e5468 45%, #64798c 100%);
+}
+
 * {
   box-sizing: border-box;
 }

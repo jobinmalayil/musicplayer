@@ -11,6 +11,9 @@ export const SKINS: Skin[] = [
   { id: 'forest', name: 'Forest', swatch: 'linear-gradient(135deg, #22c55e, #14b8a6)' },
   { id: 'midnight', name: 'Midnight', swatch: 'linear-gradient(135deg, #3b82f6, #6366f1)' },
   { id: 'mono', name: 'Mono', swatch: 'linear-gradient(135deg, #a1a1aa, #e4e4e7)' },
+  { id: 'terracotta', name: 'Terracotta', swatch: 'linear-gradient(135deg, #f2a65a, #c2542c)' },
+  { id: 'jade', name: 'Jade', swatch: 'linear-gradient(135deg, #e8c987, #2f7a63)' },
+  { id: 'slate', name: 'Slate', swatch: 'linear-gradient(135deg, #d7b98a, #3e5468)' },
 ];
 
 export const DEFAULT_SKIN = 'violet';
