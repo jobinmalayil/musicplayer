@@ -926,14 +926,58 @@
   flex: 1;
 }
 
-/* Sign out */
-.sign-out-btn {
+/* Home header actions */
+.home-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.home-header-actions .icon-btn {
   background: var(--surface);
   border: 1px solid var(--border);
 }
 
 .sign-out-btn:hover {
   color: var(--danger);
+}
+
+/* Theme picker */
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.skin-swatch-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.skin-swatch-btn.active {
+  border-color: var(--accent-2);
+}
+
+.skin-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+}
+
+.skin-swatch-name {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  text-align: left;
 }
 
 /* Admin */

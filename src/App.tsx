@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SkinProvider } from './context/SkinContext';
 import { PlayerProvider } from './context/PlayerContext';
 import { PlaylistsProvider } from './context/PlaylistsContext';
 import { RecentlyPlayedProvider } from './context/RecentlyPlayedContext';
@@ -76,8 +77,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppShell />
-    </AuthProvider>
+    <SkinProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </SkinProvider>
   );
 }

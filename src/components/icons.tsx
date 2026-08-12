@@ -9,6 +9,18 @@ export function EditIcon({ size = 18 }: IconProps) {
   );
 }
 
+export function PaletteIcon({ size = 20 }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.4-.3-.4-.5-.9-.5-1.4 0-1 .8-1.7 1.8-1.7H17a3 3 0 0 0 3-3 8 8 0 0 0-8-10.5z" />
+      <circle cx="7.5" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="10.5" cy="7" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="7.5" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="11.5" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function PlayIcon({ size = 28 }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">

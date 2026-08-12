@@ -9,7 +9,8 @@ import { getRootFolderId, listFolder, trackTitle, type Track } from '../lib/driv
 import { TrackArt } from './TrackArt';
 import { TrackRow } from './TrackRow';
 import { PlaylistArt } from './PlaylistArt';
-import { LogoutIcon } from './icons';
+import { SkinPickerSheet } from './SkinPickerSheet';
+import { LogoutIcon, PaletteIcon } from './icons';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -37,6 +38,7 @@ export function Home() {
   const { getCount } = usePlayCounts();
 
   const [libraryTracks, setLibraryTracks] = useState<Track[]>([]);
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -80,10 +82,17 @@ export function Home() {
           </div>
           <h1 className="home-greeting">{greeting()}</h1>
         </div>
-        <button className="icon-btn sign-out-btn" onClick={disconnect} aria-label="Sign out">
-          <LogoutIcon size={20} />
-        </button>
+        <div className="home-header-actions">
+          <button className="icon-btn" onClick={() => setThemePickerOpen(true)} aria-label="Change theme">
+            <PaletteIcon size={20} />
+          </button>
+          <button className="icon-btn sign-out-btn" onClick={disconnect} aria-label="Sign out">
+            <LogoutIcon size={20} />
+          </button>
+        </div>
       </div>
+
+      {themePickerOpen && <SkinPickerSheet onClose={() => setThemePickerOpen(false)} />}
 
       {recentlyPlayed.length > 0 && (
         <section className="home-section">
