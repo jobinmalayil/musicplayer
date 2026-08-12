@@ -17,8 +17,22 @@
   gap: 12px;
 }
 
-.login-logo {
+.login-photo {
   align-self: center;
+  width: 168px;
+  aspect-ratio: 1.44 / 1;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px -12px rgba(139, 92, 246, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+.login-photo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 39%;
 }
 
 .login-card h1 {
