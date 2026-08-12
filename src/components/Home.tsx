@@ -74,7 +74,12 @@ export function Home() {
   return (
     <div className="library">
       <div className="home-header-row">
-        <h1 className="home-greeting">{greeting()}</h1>
+        <div className="home-identity">
+          <div className="home-avatar" aria-hidden="true">
+            <img src="/artist-photos/jobin-abraham.jpg" alt="" className="home-avatar-img" />
+          </div>
+          <h1 className="home-greeting">{greeting()}</h1>
+        </div>
         <button className="icon-btn sign-out-btn" onClick={disconnect} aria-label="Sign out">
           <LogoutIcon size={20} />
         </button>
