@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { usePlayer } from '../context/PlayerContext';
 import { useTrackMetadata } from '../hooks/useTrackMetadata';
+import { getArtistPhoto } from '../lib/artistPhotos';
 import { trackTitle } from '../lib/drive';
 import { formatTime } from '../lib/formatTime';
 import { shareTrack } from '../lib/share';
@@ -99,7 +100,15 @@ export function NowPlayingScreen({ onClose }: { onClose: () => void }) {
           </div>
           <div className="np-meta">
             <h2 className="np-title">{meta.title || trackTitle(currentTrack)}</h2>
-            {meta.artist && <p className="np-artist">{meta.artist}</p>}
+            {meta.artist &&
+              (getArtistPhoto(meta.artist) ? (
+                <div className="np-artist-chip">
+                  <img src={getArtistPhoto(meta.artist)} alt="" className="np-artist-avatar" />
+                  <span>{meta.artist}</span>
+                </div>
+              ) : (
+                <p className="np-artist">{meta.artist}</p>
+              ))}
           </div>
 
           <div className="np-progress">

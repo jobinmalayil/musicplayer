@@ -822,6 +822,32 @@
   color: var(--text-dim);
 }
 
+.np-artist-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 4px 14px 4px 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.np-artist-chip span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.np-artist-avatar {
+  display: block;
+  width: 32px;
+  aspect-ratio: 1.44 / 1;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: 50% 39%;
+}
+
 .np-progress {
   width: 100%;
   max-width: 400px;
