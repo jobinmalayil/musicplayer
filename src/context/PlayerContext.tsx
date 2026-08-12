@@ -96,6 +96,36 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     return analyserRef.current;
   }, []);
 
+  // iOS suspends the Web Audio API context whenever the page is backgrounded
+  // (locked screen, app switcher, home-screen PWA minimized) — but only
+  // because the waveform visualizer routes the <audio> element's output
+  // through it (createMediaElementSource hijacks direct playback once
+  // called). The <audio> element and MediaSession keep reporting "playing"
+  // the whole time, but no sound reaches the speakers until the context is
+  // resumed. Nudge it back to 'running' as aggressively as possible so
+  // background playback doesn't go silent.
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    const resumeIfNeeded = () => {
+      const ctx = audioContextRef.current;
+      if (ctx && ctx.state !== 'running' && isPlayingRef.current) void ctx.resume();
+    };
+    document.addEventListener('visibilitychange', resumeIfNeeded);
+    window.addEventListener('pageshow', resumeIfNeeded);
+    window.addEventListener('focus', resumeIfNeeded);
+    const interval = setInterval(resumeIfNeeded, 1000);
+    return () => {
+      document.removeEventListener('visibilitychange', resumeIfNeeded);
+      window.removeEventListener('pageshow', resumeIfNeeded);
+      window.removeEventListener('focus', resumeIfNeeded);
+      clearInterval(interval);
+    };
+  }, []);
+
   const currentIndex = order[orderPos] ?? -1;
   const currentTrack = currentIndex >= 0 ? queue[currentIndex] : null;
 
@@ -244,7 +274,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (currentTrack) {
       session.metadata = new MediaMetadata({
         title: trackTitle(currentTrack),
-        artist: 'Drive Music',
+        artist: 'Jobin Abraham',
+        artwork: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
       });
     } else {
       session.metadata = null;
